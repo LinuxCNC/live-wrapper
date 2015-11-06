@@ -1,0 +1,7 @@
+Kernel version detection should be in vmdebootstrap helper
+Write install_grub function
+Build xorriso and vmdebootstrap args from cli options
+docstrings everywhere
+More documentation
+Documentation
+Unit tests

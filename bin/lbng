@@ -1,0 +1,82 @@
+#!/usr/bin/env python
+
+"""
+lbng - Live Build Next Generation
+(C) Iain R. Learmonth 2015 <irl@debian.org>
+See COPYING for terms of usage, modification and redistribution.
+
+bin/lbng - Live Build Next Generation
+"""
+
+import sys
+import os
+import cliapp
+import logging
+import subprocess
+import lbng.isolinux
+from vmdebootstrap.base import runcmd
+from lbng.vm import vmdebootstrap
+
+__version__ = '0.1'
+
+class LiveBuildNG(cliapp.Application):
+
+    def add_settings(self):
+        self.settings.string(
+                ['o', 'image_output'], 'Location for built image',
+                metavar='/PATH/TO/FILE.ISO',
+                default='live.iso', group='Base Settings')
+        self.settings.string(
+                ['d', 'distribution'], 'Debian release to use (default: %default)',
+                metavar='NAME',
+                default='stable', group='Base Settings')
+        self.settings.string(
+                ['m', 'mirror'], 'Mirror to use for image creation',
+                metavar='MIRROR',
+                group='Base Settings')
+        self.settings.boolean(
+                ['isolinux'], 'Add isolinux bootloader to the image (default: %default)',
+                default=True, group="Bootloaders")
+        self.settings.boolean(
+                ['grub'], 'Add GRUB bootloader to the image (for EFI support) (default: %default)',
+                default=True, group="Bootloaders")
+
+    def process_args(self, args):
+        if not self.settings['isolinux'] and not self.settings['grub']:
+            cliapp.AppException("You must enable at least one bootloader!")
+        if os.geteuid() != 0:
+            sys.exit("You need to have root privileges to run this script.")
+        self.start_ops()
+
+    def start_ops(self):
+        #create work directory
+        if not os.path.exists("cdroot"):
+            os.mkdir("cdroot")
+        else:
+            cliapp.AppException("A cdroot directory already exists. Please remove before building a fresh image.")
+
+        #a base set of arguments, these might be customisable later
+        vmdebootstrap_args = ["/home/irl/debian/vmdebootstrap/bin/vmdebootstrap",
+                "--sudo", "--lock-root-password",
+                "--enable-dhcp", "--configure-apt", "--log", "vmdebootstrap.log",
+                "--squash=cdroot/live/", "--log-level", "debug",
+                "--customize", "hooks/customise.sh"]
+        
+        vmdebootstrap_args.append("--distribution")
+        vmdebootstrap_args.append(self.settings['distribution'])
+
+        vmdebootstrap_args.append("--mirror")
+        vmdebootstrap_args.append(self.settings['mirror'])
+
+        vmdebootstrap(vmdebootstrap_args)
+
+        lbng.isolinux.install_isolinux("cdroot")    
+
+        xorriso_args = ["xorriso", "-outdev", "output.iso", "-map", "cdroot/", "/",
+                "-boot_image", "isolinux", "dir=/boot/isolinux"]
+        runcmd(xorriso_args)
+
+        sys.exit("Completed successfully.")
+
+if __name__ == "__main__":
+    LiveBuildNG(version=__version__).run()
