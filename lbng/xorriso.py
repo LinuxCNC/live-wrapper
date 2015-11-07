@@ -21,7 +21,10 @@ class Xorriso:
                 self.args.extend(['map', 'cdroot/', '/'])
                 
                 if self.isolinux:
-                        self.args.extend(['-boot_image', 'isolinux', 'dir=/boot/isolinux'])
+                    self.args.extend(['-boot_image', 'isolinux', 'dir=/boot/isolinux'])
+
+                if self.grub:
+                    self.args.extend(['-as', 'mkisofs', '-eltorito-alt-boot', '-e', 'boot/grub/efi.img', '-no-emul-boot', '-isohybrid-gpt-basdat'])
 
         def build_image(self):
                 self._build_args()

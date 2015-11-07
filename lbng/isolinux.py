@@ -16,8 +16,8 @@ class ISOLINUXConfig:
     vmdebootstrap squashfs output directory.
     """
 
-    def __init__(self, directory):
-        self.versions = detect_kernels()
+    def __init__(self, cdroot):
+        self.versions = detect_kernels(cdroot)
 
     def generate_cfg(self):
         ret = str()
@@ -44,4 +44,4 @@ def install_isolinux(cdroot):
     shutil.copyfile("/usr/lib/syslinux/modules/bios/ldlinux.c32", "%s/ldlinux.c32" % (ISOLINUX_DIR,))
     shutil.copyfile("/usr/lib/ISOLINUX/isolinux.bin", "%s/isolinux.bin" % (ISOLINUX_DIR,))
     with open("%s/isolinux.cfg" % (ISOLINUX_DIR,), "w") as cfgout:
-        cfgout.write(ISOLINUXConfig("%s/live" % (cdroot,)).generate_cfg())
+        cfgout.write(ISOLINUXConfig(cdroot).generate_cfg())

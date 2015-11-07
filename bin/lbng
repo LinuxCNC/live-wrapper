@@ -13,9 +13,12 @@ import os
 import cliapp
 import logging
 import subprocess
-import lbng.isolinux
+import pycurl
+from tarfile import TarFile
 from vmdebootstrap.base import runcmd
-from lbng.vm import vmdebootstrap
+from lbng.vm import VMDebootstrap
+from lbng.isolinux import install_isolinux
+from lbng.grub import install_grub
 from lbng.xorriso import Xorriso
 
 __version__ = '0.1'
@@ -42,6 +45,19 @@ class LiveBuildNG(cliapp.Application):
                 ['grub'], 'Add GRUB bootloader to the image (for EFI support) (default: %default)',
                 default=True, group="Bootloaders")
 
+    def fetch_di_helpers(self):
+        with open('info.tar.gz', 'w') as info:
+            c = pycurl.Curl()
+            c.setopt(c.URL, 'ftp://ftp.debian.org/debian/dists/stretch/main/installer-amd64/current/images/cdrom/debian-cd_info.tar.gz')
+            c.setopt(c.WRITEDATA, info)
+            c.perform()
+            c.close()
+        info = TarFile.open('info.tar.gz', 'r:gz')
+        if not os.path.exists('cdhelp'):
+            os.mkdir('cdhelp')
+        info.extractall(path='cdhelp/')
+        info.close()
+
     def process_args(self, args):
         if not self.settings['isolinux'] and not self.settings['grub']:
             cliapp.AppException("You must enable at least one bootloader!")
@@ -58,12 +74,20 @@ class LiveBuildNG(cliapp.Application):
 
         #Run vmdebootstrap
         vm = VMDebootstrap(self.settings['distribution'],
-                mirror=self.settings['mirror'])
+                self.settings['mirror'])
         vm.run()
+
+        #Fetch D-I helper archive if needed
+        if self.settings['grub']:
+            self.fetch_di_helpers()
 
         #Install isolinux if selected
         if self.settings['isolinux']:
-            lbng.isolinux.install_isolinux('cdroot')    
+            install_isolinux('cdroot')
+
+        #Install GRUB if selected
+        if self.settings['grub']:
+            install_grub('cdroot', 'cdhelp')
 
         #Create ISO image
         xorriso = Xorriso(self.settings['image_output'],

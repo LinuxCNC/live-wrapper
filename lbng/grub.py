@@ -7,6 +7,8 @@ lbng/grub.py - Grub 2 helpers
 """
 
 import os
+import shutil
+from lbng.vm import detect_kernels
 
 class GrubConfig():
     """
@@ -14,24 +16,20 @@ class GrubConfig():
     vmdebootstrap squashfs output directory.
     """
 
-    versions = []
-    name = "Custom Live"
-
-    def __init__(self, directory):
-        filenames = os.listdir(directory)
-        for filename in filenames:
-            if filename[0:8] == "vmlinuz-":
-                self.add_version(filename[8:])
-
-    def add_version(self, version):
-        self.versions.add(version)
+    def __init__(self, cdroot):
+        self.versions = detect_kernels(cdroot)
 
     def generate_cfg(self):
         ret = str()
-        versions.sort(reverse=True)
-        for version in versions:
+        self.versions.sort(reverse=True)
+        for version in self.versions:
             ret += "menuentry \"Debian GNU/Linux Live (kernel %s)\" {\n" % (version,)
             ret += "  linux  /live/vmlinuz-%s boot=live components\n"  % (version,)
             ret += "  initrd /live/initrd.img-%s\n" % (version,)
             ret += "}\n"
         return ret
+
+def install_grub(cdroot, cdhelp):
+    shutil.copytree("%s/grub" % (cdhelp,), "%s/boot/grub" % (cdroot,))
+    with open("%s/boot/grub/grub.cfg" % (cdroot,), "a") as cfgout:
+        cfgout.write(GrubConfig(cdroot).generate_cfg())
