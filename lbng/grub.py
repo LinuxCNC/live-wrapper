@@ -1,5 +1,5 @@
 """
-lbng - Live Build Next Generation
+live-build-ng - Live-Build NG
 (C) Iain R. Learmonth 2015 <irl@debian.org>
 See COPYING for terms of usage, modification and redistribution.
 
