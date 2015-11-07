@@ -18,6 +18,7 @@ from tarfile import TarFile
 from vmdebootstrap.base import runcmd
 from lbng.vm import VMDebootstrap
 from lbng.isolinux import install_isolinux
+from lbng.disk import install_disk_info
 from lbng.grub import install_grub
 from lbng.xorriso import Xorriso
 
@@ -38,6 +39,14 @@ class LiveBuildNG(cliapp.Application):
                 ['m', 'mirror'], 'Mirror to use for image creation',
                 metavar='MIRROR',
                 group='Base Settings')
+        self.settings.string(
+                ['t', 'tasks'], 'Task packages to install',
+                metavar='"task-TASK1 task-TASK2 ..."',
+                group='Packages')
+        self.settings.string(
+                ['e', 'extra'], 'Extra packages to install',
+                metavar='"PKG1 PKG2 ..."',
+                group='Packages')
         self.settings.boolean(
                 ['isolinux'], 'Add isolinux bootloader to the image (default: %default)',
                 default=True, group="Bootloaders")
@@ -72,6 +81,10 @@ class LiveBuildNG(cliapp.Application):
         else:
             cliapp.AppException("A cdroot directory already exists. Please remove before building a fresh image.")
 
+        #Make options available to customise hook in vmdebootstrap
+        os.environ['LBNG_TASK_PACKAGES'] = self.settings['tasks']
+        os.environ['LBNG_EXTRA_PACKAGES'] = self.settings['extra']
+
         #Run vmdebootstrap
         vm = VMDebootstrap(self.settings['distribution'],
                 self.settings['mirror'])
@@ -89,14 +102,14 @@ class LiveBuildNG(cliapp.Application):
         if self.settings['grub']:
             install_grub('cdroot', 'cdhelp')
 
+        #Install .disk information
+        install_disk_info()
+
         #Create ISO image
         xorriso = Xorriso(self.settings['image_output'],
                 isolinux=self.settings['isolinux'],
                 grub=self.settings['grub'])
         xorriso.build_image()
-
-        #Done
-        sys.exit("Completed successfully.")
 
 if __name__ == "__main__":
     LiveBuildNG(version=__version__).run()

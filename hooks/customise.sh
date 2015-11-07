@@ -13,7 +13,7 @@ mount_support
 disable_daemons
 # prepare_apt_source
 
-chroot ${rootdir} apt-get -y --force-yes install initramfs-tools live-boot live-config xserver-xorg task-xfce-desktop
+chroot ${rootdir} apt-get -y install initramfs-tools live-boot live-config ${LBNG_TASK_PACKAGES} ${LBNG_EXTRA_PACKAGES}
 
 echo "blacklist bochs-drm" > $rootdir/etc/modprobe.d/qemu-blacklist.conf
 
