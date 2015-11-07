@@ -16,6 +16,7 @@ import subprocess
 import lbng.isolinux
 from vmdebootstrap.base import runcmd
 from lbng.vm import vmdebootstrap
+from lbng.xorriso import Xorriso
 
 __version__ = '0.1'
 
@@ -72,9 +73,10 @@ class LiveBuildNG(cliapp.Application):
 
         lbng.isolinux.install_isolinux("cdroot")    
 
-        xorriso_args = ["xorriso", "-outdev", "output.iso", "-map", "cdroot/", "/",
-                "-boot_image", "isolinux", "dir=/boot/isolinux"]
-        runcmd(xorriso_args)
+        xorriso = Xorriso(self.settings['image_output'],
+                isolinux=self.settings['isolinux'],
+                grub=self.settings['grub'])
+        xorriso.build_image()
 
         sys.exit("Completed successfully.")
 
