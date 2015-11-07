@@ -8,6 +8,14 @@ lbng/vm.py - vmdebootstrap helpers
 
 from vmdebootstrap.base import runcmd
 
+def detect_kernels():
+    versions = []
+    filenames = os.listdir(directory)
+    for filename in filenames:
+        if filename[0:8] == "vmlinuz-":
+            versions.append(filename[8:])
+    return versions
+
 def vmdebootstrap(args):
     """
     Call vmdebootstrap.

@@ -8,6 +8,7 @@ lbng/isolinux.py - ISOLINUX helpers
 
 import os
 import shutil
+from lbng.vm import detect_kernels
 
 class ISOLINUXConfig:
     """
@@ -15,14 +16,8 @@ class ISOLINUXConfig:
     vmdebootstrap squashfs output directory.
     """
 
-    versions = []
-    name = "Custom Live"
-
     def __init__(self, directory):
-        filenames = os.listdir(directory)
-        for filename in filenames:
-            if filename[0:8] == "vmlinuz-":
-                self.versions.append(filename[8:])
+        self.versions = detect_kernels()
 
     def generate_cfg(self):
         ret = str()
