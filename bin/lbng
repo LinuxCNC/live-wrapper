@@ -50,34 +50,28 @@ class LiveBuildNG(cliapp.Application):
         self.start_ops()
 
     def start_ops(self):
-        #create work directory
+        #Create work directory
         if not os.path.exists("cdroot"):
             os.mkdir("cdroot")
         else:
             cliapp.AppException("A cdroot directory already exists. Please remove before building a fresh image.")
 
-        #a base set of arguments, these might be customisable later
-        vmdebootstrap_args = ["/home/irl/debian/vmdebootstrap/bin/vmdebootstrap",
-                "--sudo", "--lock-root-password",
-                "--enable-dhcp", "--configure-apt", "--log", "vmdebootstrap.log",
-                "--squash=cdroot/live/", "--log-level", "debug",
-                "--customize", "hooks/customise.sh"]
-        
-        vmdebootstrap_args.append("--distribution")
-        vmdebootstrap_args.append(self.settings['distribution'])
+        #Run vmdebootstrap
+        vm = VMDebootstrap(self.settings['distribution'],
+                mirror=self.settings['mirror'])
+        vm.run()
 
-        vmdebootstrap_args.append("--mirror")
-        vmdebootstrap_args.append(self.settings['mirror'])
+        #Install isolinux if selected
+        if self.settings['isolinux']:
+            lbng.isolinux.install_isolinux('cdroot')    
 
-        vmdebootstrap(vmdebootstrap_args)
-
-        lbng.isolinux.install_isolinux("cdroot")    
-
+        #Create ISO image
         xorriso = Xorriso(self.settings['image_output'],
                 isolinux=self.settings['isolinux'],
                 grub=self.settings['grub'])
         xorriso.build_image()
 
+        #Done
         sys.exit("Completed successfully.")
 
 if __name__ == "__main__":
