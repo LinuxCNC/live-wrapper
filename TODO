@@ -1,6 +1,10 @@
-Kernel version detection should be in vmdebootstrap helper
-Write install_grub function
+Generate a loopback.cfg for booting the ISO from a hard drive
 Build xorriso and vmdebootstrap args from cli options
+Pass extra options to vmdebootstrap
+Make cdroot a temporary location
+Make cdhelp a temporary location
+Validate anything downloaded by curl
+Logging everything
 docstrings everywhere
 More documentation
 Documentation
