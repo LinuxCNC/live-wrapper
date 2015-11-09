@@ -123,7 +123,7 @@ class LiveBuildNG(cliapp.Application):
 
         #Install GRUB if selected
         if self.settings['grub'] or self.settings['grub-loopback-only']:
-            install_grub('cdroot', 'cdhelp', loopback_only=self.settings['grub-loopback-only'])
+            install_grub('cdroot', 'cdhelp')
 
         #Install .disk information
         install_disk_info()

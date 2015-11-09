@@ -33,9 +33,8 @@ class GrubConfig():
             ret += "}\n"
         return ret
 
-def install_grub(cdroot, cdhelp, loopback_only=False):
-    if not loopback_only:
-        shutil.copytree("%s/grub" % (cdhelp,), "%s/boot/grub" % (cdroot,))
+def install_grub(cdroot, cdhelp):
+    shutil.copytree("%s/grub" % (cdhelp,), "%s/boot/grub" % (cdroot,))
     with open("%s/boot/grub/grub.cfg" % (cdroot,), "a") as cfgout:
         cfgout.write(GrubConfig(cdroot).generate_cfg())
     with open("%s/boot/grub/loopback.cfg" % (cdroot,), "w") as loopout:
