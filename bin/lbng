@@ -17,7 +17,7 @@ import sys
 import os
 import cliapp
 import logging
-import pycurl
+from pycurl import Curl
 from tarfile import TarFile
 from lbng.vm import VMDebootstrap
 from lbng.isolinux import install_isolinux
@@ -31,11 +31,11 @@ DI_HELPERS = 'ftp://ftp.debian.org/debian/dists/stretch/main/installer-amd64/cur
 
 def fetch_di_helpers():
     with open('info.tar.gz', 'w') as info:
-        c = pycurl.Curl()
-        c.setopt(c.URL, DI_HELPERS)
-        c.setopt(c.WRITEDATA, info)
-        c.perform()
-        c.close()
+        curl = Curl()
+        curl.setopt(curl.URL, DI_HELPERS)
+        curl.setopt(curl.WRITEDATA, info)
+        curl.perform()
+        curl.close()
     info = TarFile.open('info.tar.gz', 'r:gz')
     if not os.path.exists('cdhelp'):
         os.mkdir('cdhelp')

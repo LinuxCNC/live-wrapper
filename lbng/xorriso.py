@@ -13,6 +13,7 @@ image creation process.
     Python path.
 """
 
+import cliapp
 from vmdebootstrap.base import runcmd
 
 class Xorriso:
