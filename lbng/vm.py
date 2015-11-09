@@ -1,7 +1,7 @@
 # live-build-ng - Live-Build NG
 # (C) Iain R. Learmonth 2015 <irl@debian.org>
 # See COPYING for terms of usage, modification and redistribution.
-# 
+#
 # lbng/vm.py - vmdebootstrap helpers
 
 """
@@ -20,10 +20,11 @@ class VMDebootstrap:
 
     def __init__(self, distribution, mirror=None):
         self.args = ["/home/irl/debian/vmdebootstrap/bin/vmdebootstrap",
-            "--sudo", "--lock-root-password",
-            "--enable-dhcp", "--configure-apt", "--log", "vmdebootstrap.log",
-            "--squash=cdroot/live/", "--log-level", "debug",
-            "--customize", "hooks/customise.sh"]
+                     "--sudo", "--lock-root-password",
+                     "--enable-dhcp", "--configure-apt",
+                     "--log", "vmdebootstrap.log", "--squash=cdroot/live/",
+                     "--log-level", "debug", "--customize",
+                     "hooks/customise.sh"]
 
         self.args.extend(["--distribution", distribution])
 
