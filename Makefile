@@ -1,5 +1,5 @@
 
 check:
-	pylint bin/lbng lbng
+	PYTHONPATH=. pylint bin/lbng lbng
 	pep8 bin/lbng lbng
 

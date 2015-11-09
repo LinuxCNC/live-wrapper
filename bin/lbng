@@ -3,17 +3,22 @@
 # live-build-ng - Live-Build NG
 # (C) Iain R. Learmonth 2015 <irl@debian.org>
 # See COPYING for terms of usage, modification and redistribution.
-# 
+#
 # bin/lbng - Live-Build NG (Application)
+
+"""
+This script is the main script for the live-build-ng application. It is
+intended to be run from the command line.
+
+See live-build-ng(8) for more information.
+"""
 
 import sys
 import os
 import cliapp
 import logging
-import subprocess
 import pycurl
 from tarfile import TarFile
-from vmdebootstrap.base import runcmd
 from lbng.vm import VMDebootstrap
 from lbng.isolinux import install_isolinux
 from lbng.disk import install_disk_info
@@ -22,51 +27,56 @@ from lbng.xorriso import Xorriso
 
 __version__ = '0.1'
 
+DI_HELPERS = 'ftp://ftp.debian.org/debian/dists/stretch/main/installer-amd64/current/images/cdrom/debian-cd_info.tar.gz' # pylint: disable=line-too-long
+
+def fetch_di_helpers():
+    with open('info.tar.gz', 'w') as info:
+        c = pycurl.Curl()
+        c.setopt(c.URL, DI_HELPERS)
+        c.setopt(c.WRITEDATA, info)
+        c.perform()
+        c.close()
+    info = TarFile.open('info.tar.gz', 'r:gz')
+    if not os.path.exists('cdhelp'):
+        os.mkdir('cdhelp')
+    info.extractall(path='cdhelp/')
+    info.close()
+
+
 class LiveBuildNG(cliapp.Application):
 
     def add_settings(self):
         self.settings.string(
-                ['o', 'image_output'], 'Location for built image',
-                metavar='/PATH/TO/FILE.ISO',
-                default='live.iso', group='Base Settings')
+            ['o', 'image_output'], 'Location for built image',
+            metavar='/PATH/TO/FILE.ISO',
+            default='live.iso', group='Base Settings')
         self.settings.string(
-                ['d', 'distribution'], 'Debian release to use (default: %default)',
-                metavar='NAME',
-                default='stable', group='Base Settings')
+            ['d', 'distribution'], 'Debian release to use (default: %default)',
+            metavar='NAME',
+            default='stable', group='Base Settings')
         self.settings.string(
-                ['m', 'mirror'], 'Mirror to use for image creation',
-                metavar='MIRROR',
-                group='Base Settings')
+            ['m', 'mirror'], 'Mirror to use for image creation',
+            metavar='MIRROR',
+            group='Base Settings')
         self.settings.string(
-                ['t', 'tasks'], 'Task packages to install',
-                metavar='"task-TASK1 task-TASK2 ..."',
-                group='Packages')
+            ['t', 'tasks'], 'Task packages to install',
+            metavar='"task-TASK1 task-TASK2 ..."',
+            group='Packages')
         self.settings.string(
-                ['e', 'extra'], 'Extra packages to install',
-                metavar='"PKG1 PKG2 ..."',
-                group='Packages')
+            ['e', 'extra'], 'Extra packages to install',
+            metavar='"PKG1 PKG2 ..."',
+            group='Packages')
         self.settings.boolean(
-                ['isolinux'], 'Add isolinux bootloader to the image (default: %default)',
-                default=True, group="Bootloaders")
+            ['isolinux'], 'Add isolinux bootloader to the image '
+            '(default: %default)', default=True, group="Bootloaders")
         self.settings.boolean(
-                ['grub'], 'Add GRUB bootloader to the image (for EFI support) (default: %default)',
-                default=True, group="Bootloaders")
+            ['grub'], 'Add GRUB bootloader to the image (for EFI support) '
+            '(default: %default)', default=True, group="Bootloaders")
         self.settings.boolean(
-                ['grub-loopback-only'], 'Only install the loopback.cfg GRUB configuration (for loopback support) (overrides --grub) (default: %default)',
-                default=False, group="Bootloaders")
+            ['grub-loopback-only'], 'Only install the loopback.cfg GRUB '
+            'configuration (for loopback support) (overrides --grub) '
+            '(default: %default)', default=False, group="Bootloaders")
 
-    def fetch_di_helpers(self):
-        with open('info.tar.gz', 'w') as info:
-            c = pycurl.Curl()
-            c.setopt(c.URL, 'ftp://ftp.debian.org/debian/dists/stretch/main/installer-amd64/current/images/cdrom/debian-cd_info.tar.gz')
-            c.setopt(c.WRITEDATA, info)
-            c.perform()
-            c.close()
-        info = TarFile.open('info.tar.gz', 'r:gz')
-        if not os.path.exists('cdhelp'):
-            os.mkdir('cdhelp')
-        info.extractall(path='cdhelp/')
-        info.close()
 
     def process_args(self, args):
         if not self.settings['isolinux'] and not self.settings['grub']:
@@ -78,11 +88,21 @@ class LiveBuildNG(cliapp.Application):
         self.start_ops()
 
     def start_ops(self):
+        """
+        This function creates the live image using the settings determined by
+        the arguments passed on the command line.
+
+        .. note::
+            This function is called by process_args() once all the arguments
+            have been validated.
+        """
+
         #Create work directory
         if not os.path.exists("cdroot"):
             os.mkdir("cdroot")
         else:
-            cliapp.AppException("A cdroot directory already exists. Please remove before building a fresh image.")
+            cliapp.AppException("A cdroot directory already exists. Please "
+                                "remove before building a fresh image.")
 
         #Make options available to customise hook in vmdebootstrap
         os.environ['LBNG_TASK_PACKAGES'] = self.settings['tasks']
@@ -90,12 +110,12 @@ class LiveBuildNG(cliapp.Application):
 
         #Run vmdebootstrap
         vm = VMDebootstrap(self.settings['distribution'],
-                self.settings['mirror'])
+                           self.settings['mirror'])
         vm.run()
 
         #Fetch D-I helper archive if needed
         if self.settings['grub']:
-            self.fetch_di_helpers()
+            fetch_di_helpers()
 
         #Install isolinux if selected
         if self.settings['isolinux']:
@@ -110,8 +130,8 @@ class LiveBuildNG(cliapp.Application):
 
         #Create ISO image
         xorriso = Xorriso(self.settings['image_output'],
-                isolinux=self.settings['isolinux'],
-                grub=self.settings['grub'])
+                          isolinux=self.settings['isolinux'],
+                          grub=self.settings['grub'])
         xorriso.build_image()
 
 if __name__ == "__main__":
