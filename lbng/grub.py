@@ -20,11 +20,11 @@ class GrubConfig():
         self.versions = detect_kernels(cdroot)
 
     def generate_cfg(self):
-        ret = str()
+        ret = "if [ ${iso_path} ] ; then\nset loopback="findiso=${iso_path}"\nfi\n\n"
         self.versions.sort(reverse=True)
         for version in self.versions:
             ret += "menuentry \"Debian GNU/Linux Live (kernel %s)\" {\n" % (version,)
-            ret += "  linux  /live/vmlinuz-%s boot=live components\n"  % (version,)
+            ret += "  linux  /live/vmlinuz-%s boot=live components \"${loopback}\"\n"  % (version,)
             ret += "  initrd /live/initrd.img-%s\n" % (version,)
             ret += "}\n"
         return ret
@@ -33,3 +33,5 @@ def install_grub(cdroot, cdhelp):
     shutil.copytree("%s/grub" % (cdhelp,), "%s/boot/grub" % (cdroot,))
     with open("%s/boot/grub/grub.cfg" % (cdroot,), "a") as cfgout:
         cfgout.write(GrubConfig(cdroot).generate_cfg())
+    with open("%s/boot/grub/loopback.cfg" % (cdroot,), "w") as loopout:
+        loopout.write("source /boot/grub/grub.cfg")
