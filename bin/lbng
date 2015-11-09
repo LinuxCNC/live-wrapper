@@ -132,6 +132,7 @@ class LiveBuildNG(cliapp.Application):
         xorriso = Xorriso(self.settings['image_output'],
                           isolinux=self.settings['isolinux'],
                           grub=self.settings['grub'])
+        xorriso.build_args()
         xorriso.build_image()
 
 if __name__ == "__main__":

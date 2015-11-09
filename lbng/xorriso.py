@@ -57,4 +57,7 @@ class Xorriso:
         .. warning::
             The ``xorriso`` binary must be present in the current PATH.
         """
+        if len(self.args) == 1:
+            cliapp.AppException("Attempted to run xorriso before building "
+                                "arguments!")
         runcmd(self.args)
