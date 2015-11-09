@@ -16,6 +16,11 @@ image creation process.
 from vmdebootstrap.base import runcmd
 
 class Xorriso:
+    """
+    This class acts as a wrapper for ``xorriso`` and allows for the command
+    line arguments passed to be built based on the settings given to the main
+    application.
+    """
 
     def __init__(self, image_output, isolinux=True, grub=True):
         self.image_output = image_output
@@ -41,4 +46,14 @@ class Xorriso:
         return self.args
 
     def build_image(self):
+        """
+        This will call ``xorriso`` with the arguments built.
+
+        .. note::
+            :any:`Xorriso.build_args` must have been called before
+            calling :any:`Xorriso.build_image`.
+
+        .. warning::
+            The ``xorriso`` binary must be present in the current PATH.
+        """
         runcmd(self.args)

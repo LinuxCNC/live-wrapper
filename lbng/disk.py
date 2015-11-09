@@ -12,6 +12,11 @@ the cdroot.
 import os
 
 def install_disk_info():
+    """
+    This function creates the .disk/info metadata and installs it into the
+    cdroot.
+    """
+
     os.mkdir("cdroot/.disk")
     with open("cdroot/.disk/info", "w") as i:
         i.write("HELLO")
