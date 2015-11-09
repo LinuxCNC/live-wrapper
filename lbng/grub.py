@@ -1,9 +1,13 @@
-"""
-live-build-ng - Live-Build NG
-(C) Iain R. Learmonth 2015 <irl@debian.org>
-See COPYING for terms of usage, modification and redistribution.
+# live-build-ng - Live-Build NG
+# (C) Iain R. Learmonth 2015 <irl@debian.org>
+# See COPYING for terms of usage, modification and redistribution.
+# 
+# lbng/grub.py - Grub 2 helpers
 
-lbng/grub.py - Grub 2 helpers
+"""
+The lbng.grub module contains helpers for GRUB 2 including the installation
+of GRUB files to the cdroot and the generation of the grub.cfg and loopback.cfg
+files.
 """
 
 import os

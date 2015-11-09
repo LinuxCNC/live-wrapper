@@ -1,9 +1,16 @@
-"""
-live-build-ng - Live-Build NG
-(C) Iain R. Learmonth 2015 <irl@debian.org>
-See COPYING for terms of usage, modification and redistribution.
+# live-build-ng - Live-Build NG
+# (C) Iain R. Learmonth 2015 <irl@debian.org>
+# See COPYING for terms of usage, modification and redistribution.
+# 
+# lbng/vm.py - vmdebootstrap helpers
 
-lbng/vm.py - vmdebootstrap helpers
+"""
+The lbng.vm module provides helpers for calling vmdebootstrap as part of the
+image creation process.
+
+.. note::
+    This module requires that the vmdebootstrap modules be available in the
+    Python path.
 """
 
 import os
