@@ -34,5 +34,5 @@ setup(
         'cliapp >= 1.20150829',
         'vmdebootstrap',
     ],
-    scripts=['bin/lbng']
+    scripts=['bin/lwr']
 )

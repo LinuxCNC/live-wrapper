@@ -1,16 +1,16 @@
 #!/usr/bin/env python
 
-# live-build-ng - Live-Build NG
+# live-wrapper - Wrapper for vmdebootstrap for creating live images
 # (C) Iain R. Learmonth 2015 <irl@debian.org>
 # See COPYING for terms of usage, modification and redistribution.
 #
-# bin/lbng - Live-Build NG (Application)
+# bin/lwr - Live Wrapper (Application)
 
 """
-This script is the main script for the live-build-ng application. It is
+This script is the main script for the live-wrapper application. It is
 intended to be run from the command line.
 
-See live-build-ng(8) for more information.
+See live-wrapper(8) for more information.
 """
 
 import sys
