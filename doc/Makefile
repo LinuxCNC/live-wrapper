@@ -87,9 +87,9 @@ qthelp:
 	@echo
 	@echo "Build finished; now you can run "qcollectiongenerator" with the" \
 	      ".qhcp project file in $(BUILDDIR)/qthelp, like this:"
-	@echo "# qcollectiongenerator $(BUILDDIR)/qthelp/live-build-ng.qhcp"
+	@echo "# qcollectiongenerator $(BUILDDIR)/qthelp/live-wrapper.qhcp"
 	@echo "To view the help file:"
-	@echo "# assistant -collectionFile $(BUILDDIR)/qthelp/live-build-ng.qhc"
+	@echo "# assistant -collectionFile $(BUILDDIR)/qthelp/live-wrapper.qhc"
 
 applehelp:
 	$(SPHINXBUILD) -b applehelp $(ALLSPHINXOPTS) $(BUILDDIR)/applehelp
@@ -104,8 +104,8 @@ devhelp:
 	@echo
 	@echo "Build finished."
 	@echo "To view the help file:"
-	@echo "# mkdir -p $$HOME/.local/share/devhelp/live-build-ng"
-	@echo "# ln -s $(BUILDDIR)/devhelp $$HOME/.local/share/devhelp/live-build-ng"
+	@echo "# mkdir -p $$HOME/.local/share/devhelp/live-wrapper"
+	@echo "# ln -s $(BUILDDIR)/devhelp $$HOME/.local/share/devhelp/live-wrapper"
 	@echo "# devhelp"
 
 epub:

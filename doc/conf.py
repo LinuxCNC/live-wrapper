@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-# live-build-ng documentation build configuration file, created by
+# live-wrapper documentation build configuration file, created by
 # sphinx-quickstart on Mon Nov  9 12:55:50 2015.
 #
 # This file is execfile()d with the current directory set to its
@@ -53,7 +53,7 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = 'live-build-ng'
+project = 'live-wrapper'
 copyright = '2015, Iain R. Learmonth'
 author = 'Iain R. Learmonth'
 
@@ -207,7 +207,7 @@ html_static_path = ['_static']
 #html_search_scorer = 'scorer.js'
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'live-build-ngdoc'
+htmlhelp_basename = 'live-wrapperdoc'
 
 # -- Options for LaTeX output ---------------------------------------------
 
@@ -229,7 +229,7 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-  (master_doc, 'live-build-ng.tex', 'live-build-ng Documentation',
+  (master_doc, 'live-wrapper.tex', 'live-wrapper Documentation',
    'Iain R. Learmonth', 'manual'),
 ]
 
@@ -259,7 +259,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (master_doc, 'live-build-ng', 'live-build-ng Documentation',
+    (master_doc, 'live-wrapper', 'live-wrapper Documentation',
      [author], 1)
 ]
 
@@ -273,8 +273,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-  (master_doc, 'live-build-ng', 'live-build-ng Documentation',
-   author, 'live-build-ng', 'One line description of project.',
+  (master_doc, 'live-wrapper', 'live-wrapper Documentation',
+   author, 'live-wrapper', 'One line description of project.',
    'Miscellaneous'),
 ]
 
