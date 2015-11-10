@@ -1,22 +1,20 @@
 #!/usr/bin/env python
 
-"""
-live-build-ng - Live-Build NG
+live-wrapper - Wrapper for vmdebootstrap to create live images
 (C) Iain R. Learmonth 2015 <irl@debian.org>
 See COPYING for terms of usage, modification and redistribution.
 
 setup.py - setuptools script
-"""
 
 from setuptools import setup, find_packages
 
 setup(
-    name='live-build-ng',
+    name='live-wrapper',
     version='0.1',
     description='Create a Debian live image based on vmdebootstrap',
     author='Iain R. Learmonth',
     author_email='irl@debian.org',
-    url='https://anonscm.debian.org/cgit/vmdebootstrap/live-build-ng.git/',
+    url='https://anonscm.debian.org/cgit/debian-live/live-wrapper.git',
     classifiers=[
         'Development Status :: 3 - Alpha',
         'Environment :: Console',
