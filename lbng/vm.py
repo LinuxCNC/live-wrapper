@@ -19,7 +19,7 @@ from vmdebootstrap.base import runcmd
 class VMDebootstrap:
 
     def __init__(self, distribution, mirror=None):
-        self.args = ["/home/irl/debian/vmdebootstrap/bin/vmdebootstrap",
+        self.args = ["vmdebootstrap",
                      "--sudo", "--lock-root-password",
                      "--enable-dhcp", "--configure-apt",
                      "--log", "vmdebootstrap.log", "--squash=cdroot/live/",

@@ -5,7 +5,7 @@ set -e
 rootdir=$1
 
 # common needs rootdir to already be defined.
-. /home/irl/debian/vmdebootstrap/common/customise.lib
+. /usr/share/vmdebootstrap/common/customise.lib
 
 trap cleanup 0
 

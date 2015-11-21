@@ -28,7 +28,7 @@ setup(
         'lbng',
     ],
     package_data={
-        'live-build-ng': ['README', 'COPYING'],
+        'live-wrapper': ['README', 'COPYING'],
     },
     install_requires=[
         'cliapp >= 1.20150829',
