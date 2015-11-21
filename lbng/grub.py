@@ -1,4 +1,4 @@
-# live-build-ng - Live-Build NG
+# live-wrapper - Wrapper for vmdebootstrap for creating live images
 # (C) Iain R. Learmonth 2015 <irl@debian.org>
 # See COPYING for terms of usage, modification and redistribution.
 # 
