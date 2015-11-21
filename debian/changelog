@@ -1,5 +1,5 @@
-live-wrapper (0.1) UNRELEASED; urgency=medium
+live-wrapper (0.1) unstable; urgency=medium
 
   * Initial release. (Closes: #804315)
 
- -- Iain R. Learmonth <irl@debian.org>  Sat, 21 Nov 2015 14:49:18 +0000
+ -- Iain R. Learmonth <irl@debian.org>  Sat, 21 Nov 2015 15:18:36 +0000
