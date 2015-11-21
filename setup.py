@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 
-live-wrapper - Wrapper for vmdebootstrap to create live images
-(C) Iain R. Learmonth 2015 <irl@debian.org>
-See COPYING for terms of usage, modification and redistribution.
-
-setup.py - setuptools script
+# live-wrapper - Wrapper for vmdebootstrap to create live images
+# (C) Iain R. Learmonth 2015 <irl@debian.org>
+# See COPYING for terms of usage, modification and redistribution.
+# 
+# setup.py - setuptools script
 
 from setuptools import setup, find_packages
 

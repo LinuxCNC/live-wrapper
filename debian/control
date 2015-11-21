@@ -1,0 +1,40 @@
+Source: live-wrapper
+Section: misc
+Priority: optional
+Maintainer: Debian Live <debian-live@lists.debian.org>
+Uploaders: Iain R. Learmonth <irl@debian.org>
+Build-Depends: debhelper (>= 9),
+               dh-python,
+               python-all,
+               python-setuptools,
+               python-sphinx
+Standards-Version: 3.9.6
+Vcs-Browser: http://anonscm.debian.org/cgit/debian-live/live-wrapper.git
+Vcs-Git: http://anonscm.debian.org/git/debian-live/live-wrapper.git
+Homepage: https://debian-live.alioth.debian.org/live-wrapper/
+
+Package: live-wrapper
+Architecture: all
+Depends: ${misc:Depends}, ${python:Depends}, vmdebootstrap
+Description: Wrapper for vmdebootstrap for creating live images
+ live-wrapper is a wrapper around vmdebootstrap to install a live Debian
+ system into an ISO image, which can be used by booting from optical media or a
+ USB device.
+ .
+ isolinux and grub2 bootloaders can be supported, depending on the distribution
+ and the architecture.
+
+Package: live-wrapper-doc
+Section: doc
+Architecture: all
+Depends: ${misc:Depends}
+Description: Wrapper for vmdebootstrap for creating live images (Documentation)
+ live-wrapper is a wrapper around vmdebootstrap to install a live Debian
+ system into an ISO image, which can be used by booting from optical media or a
+ USB device.
+ .
+ isolinux and grub2 bootloaders can be supported, depending on the distribution
+ and the architecture.
+ .
+ This package contains documentation on using live-wrapper to create live
+ images.
