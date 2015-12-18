@@ -29,7 +29,7 @@ class VMDebootstrap:
         self.args.extend(["--distribution", distribution])
 
         if mirror is not None:
-            self.args.extend(["--mirror", mirror])
+            self.args.extend(["--apt-mirror", mirror])
 
     def run(self):
         runcmd(self.args)
