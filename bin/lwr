@@ -107,6 +107,8 @@ class LiveBuildNG(cliapp.Application):
         #Make options available to customise hook in vmdebootstrap
         os.environ['LBNG_TASK_PACKAGES'] = self.settings['tasks']
         os.environ['LBNG_EXTRA_PACKAGES'] = self.settings['extra']
+        if self.settings['mirror'] == "":
+            os.environ['MIRROR'] = self.settings['mirror']
 
         #Run vmdebootstrap
         vm = VMDebootstrap(self.settings['distribution'],
