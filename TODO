@@ -1,4 +1,3 @@
-Allow installation of loopback.cfg without the GRUB install
 Allow custom kernel command line
 Build xorriso and vmdebootstrap args from cli options
 Pass extra options to vmdebootstrap
@@ -8,5 +7,5 @@ Validate anything downloaded by curl - check with debian-ftp or d-i how to valid
 Logging everything
 docstrings everywhere
 More documentation
-Documentation
 Unit tests
+Try again if fetching the d-i helpers fails - don't just die, or at least say why you died
