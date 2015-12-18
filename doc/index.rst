@@ -6,6 +6,9 @@ Contents:
 .. toctree::
    :maxdepth: 2
 
+   intro
+   quickstart
+   advanced
    dev
 
 Indices and tables
