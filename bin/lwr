@@ -27,7 +27,7 @@ from lbng.xorriso import Xorriso
 
 __version__ = '0.1'
 
-DI_HELPERS = 'ftp://ftp.debian.org/debian/dists/stretch/main/installer-amd64/current/images/cdrom/debian-cd_info.tar.gz' # pylint: disable=line-too-long
+DI_HELPERS = 'http://ftp.debian.org/debian/dists/stretch/main/installer-amd64/current/images/cdrom/debian-cd_info.tar.gz' # pylint: disable=line-too-long
 
 def fetch_di_helpers():
     with open('info.tar.gz', 'w') as info:
