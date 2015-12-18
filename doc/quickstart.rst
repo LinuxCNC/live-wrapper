@@ -50,12 +50,6 @@ to change the mirror you're using to create the image. You can do this with the
 
   $ sudo lwr -m http://localhost/debian/
 
-.. note::
-
-  The -m parameter supports other protocols, including file://. If you have
-  a mirror on your local machine, you can cut out the overhead of the webserver
-  by pointing directly at the mirror in the filesystem.
-
 Customising Packages
 ~~~~~~~~~~~~~~~~~~~~
 
