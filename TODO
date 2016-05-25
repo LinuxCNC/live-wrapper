@@ -8,4 +8,3 @@ Logging everything
 docstrings everywhere
 More documentation
 Unit tests
-Try again if fetching the d-i helpers fails - don't just die, or at least say why you died

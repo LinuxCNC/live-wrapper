@@ -17,7 +17,7 @@ import sys
 import os
 import cliapp
 import logging
-from pycurl import Curl
+import pycurl
 from tarfile import TarFile
 from lwr.vm import VMDebootstrap
 from lwr.isolinux import install_isolinux
@@ -25,22 +25,27 @@ from lwr.disk import install_disk_info
 from lwr.grub import install_grub
 from lwr.xorriso import Xorriso
 
-__version__ = '0.1'
+__version__ = '0.4'
 
 DI_HELPERS = 'http://ftp.debian.org/debian/dists/stretch/main/installer-amd64/current/images/cdrom/debian-cd_info.tar.gz' # pylint: disable=line-too-long
 
 def fetch_di_helpers():
-    with open('info.tar.gz', 'w') as info:
-        curl = Curl()
-        curl.setopt(curl.URL, DI_HELPERS)
-        curl.setopt(curl.WRITEDATA, info)
-        curl.perform()
-        curl.close()
-    info = TarFile.open('info.tar.gz', 'r:gz')
-    if not os.path.exists('cdhelp'):
-        os.mkdir('cdhelp')
-    info.extractall(path='cdhelp/')
-    info.close()
+    logging.info("Downloading helper files from debian-installer team...")
+    try:
+        with open('info.tar.gz', 'w') as info:
+            curl = pycurl.Curl()
+            curl.setopt(curl.URL, DI_HELPERS)
+            curl.setopt(curl.WRITEDATA, info)
+            curl.perform()
+            curl.close()
+        info = TarFile.open('info.tar.gz', 'r:gz')
+        if not os.path.exists('cdhelp'):
+            os.mkdir('cdhelp')
+        info.extractall(path='cdhelp/')
+        info.close()
+    except pycurl.error:
+        logging.error("Failed to fetch the debian-installer helper files! Cannot continue!")
+        sys.exit(1)
 
 
 class LiveWrapper(cliapp.Application):
