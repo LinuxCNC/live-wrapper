@@ -1,3 +1,3 @@
 
-__all__ = ['isolinux', 'grub', 'xorriso', 'grub', 'disk']
+__all__ = ['isolinux', 'grub', 'xorriso', 'grub', 'disk', 'vm']
 
