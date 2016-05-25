@@ -1,7 +1,7 @@
 # live-wrapper - Wrapper for vmdebootstrap for creating live images
 # (C) Iain R. Learmonth 2015 <irl@debian.org>
 # See COPYING for terms of usage, modification and redistribution.
-# 
+#
 # lwr/grub.py - Grub 2 helpers
 
 """
@@ -14,6 +14,7 @@ import os
 import shutil
 from lwr.vm import detect_kernels
 
+
 class GrubConfig():
     """
     Helper class that creates a Grub 2 configuration based on a
@@ -24,14 +25,16 @@ class GrubConfig():
         self.versions = detect_kernels(cdroot)
 
     def generate_cfg(self):
-        ret = "if [ ${iso_path} ] ; then\nset loopback=\"findiso=${iso_path}\"\nfi\n\n"
+        ret = ("if [ ${iso_path} ] ; then\nset loopback=\"" +
+               "findiso=${iso_path}\"\nfi\n\n")
         self.versions.sort(reverse=True)
         for version in self.versions:
             ret += "menuentry \"Debian GNU/Linux Live (kernel %s)\" {\n" % (version,)
-            ret += "  linux  /live/vmlinuz-%s boot=live components \"${loopback}\"\n"  % (version,)
+            ret += "  linux  /live/vmlinuz-%s boot=live components \"${loopback}\"\n" % (version,)
             ret += "  initrd /live/initrd.img-%s\n" % (version,)
             ret += "}\n"
         return ret
+
 
 def install_grub(cdroot, cdhelp):
     shutil.copytree("%s/grub" % (cdhelp,), "%s/boot/grub" % (cdroot,))

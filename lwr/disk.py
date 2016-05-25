@@ -11,6 +11,7 @@ the cdroot.
 
 import os
 
+
 def install_disk_info():
     """
     This function creates the .disk/info metadata and installs it into the

@@ -16,6 +16,7 @@ image creation process.
 import cliapp
 from vmdebootstrap.base import runcmd
 
+
 class Xorriso:
     """
     This class acts as a wrapper for ``xorriso`` and allows for the command

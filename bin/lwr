@@ -30,7 +30,9 @@ from lwr.xorriso import Xorriso
 
 __version__ = '0.4'
 
-DI_HELPERS = 'http://ftp.debian.org/debian/dists/stretch/main/installer-amd64/current/images/cdrom/debian-cd_info.tar.gz' # pylint: disable=line-too-long
+DI_HELPERS = ('http://ftp.debian.org/debian/dists/stretch/main/' +
+              'installer-amd64/current/images/cdrom/debian-cd_info.tar.gz')
+
 
 def fetch_di_helpers():
     logging.info("Downloading helper files from debian-installer team...")
@@ -49,14 +51,16 @@ def fetch_di_helpers():
         os.remove(ditar[1])
         return cdhelp
     except pycurl.error:
-        logging.error("Failed to fetch the debian-installer helper files! Cannot continue!")
+        logging.error("Failed to fetch the debian-installer helper files! " +
+                      "Cannot continue!")
         sys.exit(1)
+
 
 class LiveWrapper(cliapp.Application):
 
     # Instance variables
-    cdroot = None # The path to the chroot the CD is being built in
-    cdhelp = None # The path to the debian-installer team helpers
+    cdroot = None  # The path to the chroot the CD is being built in
+    cdhelp = None  # The path to the debian-installer team helpers
 
     def add_settings(self):
         self.settings.string(
@@ -90,7 +94,6 @@ class LiveWrapper(cliapp.Application):
             'configuration (for loopback support) (overrides --grub) '
             '(default: %default)', default=False, group="Bootloaders")
 
-
     def process_args(self, args):
         if not self.settings['isolinux'] and not self.settings['grub']:
             cliapp.AppException("You must enable at least one bootloader!")
@@ -112,12 +115,12 @@ class LiveWrapper(cliapp.Application):
 
         logging.info("Creating work directory...")
 
-        #Create work directory
+        # Create work directory
         self.cdroot = tempfile.mkdtemp()
 
         logging.debug("Setting environment variables for customise hook...")
 
-        #Make options available to customise hook in vmdebootstrap
+        # Make options available to customise hook in vmdebootstrap
         os.environ['LWR_TASK_PACKAGES'] = self.settings['tasks']
         os.environ['LWR_EXTRA_PACKAGES'] = self.settings['extra']
         if self.settings['mirror'] == "":
@@ -125,30 +128,30 @@ class LiveWrapper(cliapp.Application):
 
         logging.info("Running vmdebootstrap...")
 
-        #Run vmdebootstrap
+        # Run vmdebootstrap
         vm = VMDebootstrap(self.settings['distribution'],
                            self.settings['mirror'])
         vm.run()
 
-        #Fetch D-I helper archive if needed
+        # Fetch D-I helper archive if needed
         if self.settings['grub']:
             self.cdhelp = fetch_di_helpers()
 
-        #Install isolinux if selected
+        # Install isolinux if selected
         if self.settings['isolinux']:
             logging.info("Performing isolinux installation...")
             install_isolinux(self.cdroot)
 
-        #Install GRUB if selected
+        # Install GRUB if selected
         if self.settings['grub'] or self.settings['grub-loopback-only']:
             logging.info("Performing GRUB installation...")
             install_grub(self.cdroot, self.cdhelp)
 
-        #Install .disk information
+        # Install .disk information
         logging.info("Installing the disk metadata (badly)...")
         install_disk_info()
 
-        #Create ISO image
+        # Create ISO image
         logging.info("Creating the ISO image with Xorriso...")
         xorriso = Xorriso(self.settings['image_output'],
                           isolinux=self.settings['isolinux'],
@@ -156,9 +159,9 @@ class LiveWrapper(cliapp.Application):
         xorriso.build_args(self.cdroot)
         xorriso.build_image()
 
-        #Remove the temporary directories
+        # Remove the temporary directories
         logging.info("Removing temporary work directories...")
-        if self.cdhelp != None:
+        if self.cdhelp is not None:
             rmtree(self.cdhelp)
         rmtree(self.cdroot)
 

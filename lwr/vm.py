@@ -16,6 +16,7 @@ image creation process.
 import os
 from vmdebootstrap.base import runcmd
 
+
 class VMDebootstrap:
 
     def __init__(self, distribution, mirror=None):
@@ -33,6 +34,7 @@ class VMDebootstrap:
 
     def run(self):
         runcmd(self.args)
+
 
 def detect_kernels(cdroot):
     versions = []
