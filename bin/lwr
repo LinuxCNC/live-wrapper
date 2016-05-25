@@ -115,11 +115,15 @@ class LiveWrapper(cliapp.Application):
         #Create work directory
         self.cdroot = tempfile.mkdtemp()
 
+        logging.debug("Setting environment variables for customise hook...")
+
         #Make options available to customise hook in vmdebootstrap
         os.environ['LWR_TASK_PACKAGES'] = self.settings['tasks']
         os.environ['LWR_EXTRA_PACKAGES'] = self.settings['extra']
         if self.settings['mirror'] == "":
             os.environ['MIRROR'] = self.settings['mirror']
+
+        logging.info("Running vmdebootstrap...")
 
         #Run vmdebootstrap
         vm = VMDebootstrap(self.settings['distribution'],
@@ -132,16 +136,20 @@ class LiveWrapper(cliapp.Application):
 
         #Install isolinux if selected
         if self.settings['isolinux']:
+            logging.info("Performing isolinux installation...")
             install_isolinux(self.cdroot)
 
         #Install GRUB if selected
         if self.settings['grub'] or self.settings['grub-loopback-only']:
+            logging.info("Performing GRUB installation...")
             install_grub(self.cdroot, self.cdhelp)
 
         #Install .disk information
+        logging.info("Installing the disk metadata (badly)...")
         install_disk_info()
 
         #Create ISO image
+        logging.info("Creating the ISO image with Xorriso...")
         xorriso = Xorriso(self.settings['image_output'],
                           isolinux=self.settings['isolinux'],
                           grub=self.settings['grub'])
@@ -149,6 +157,7 @@ class LiveWrapper(cliapp.Application):
         xorriso.build_image()
 
         #Remove the temporary directories
+        logging.info("Removing temporary work directories...")
         if self.cdhelp != None:
             rmtree(self.cdhelp)
         rmtree(self.cdroot)
