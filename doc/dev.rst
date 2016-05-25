@@ -5,5 +5,5 @@ Developer Documentation
 .. toctree::
    :maxdepth: 2
 
-   lbng
+   lwr
 

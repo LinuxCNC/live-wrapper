@@ -10,7 +10,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='live-wrapper',
-    version='0.1',
+    version='0.4',
     description='Create a Debian live image based on vmdebootstrap',
     author='Iain R. Learmonth',
     author_email='irl@debian.org',
@@ -25,7 +25,7 @@ setup(
         'Topic :: System :: Installation/Setup',
     ],
     packages=[
-        'lbng',
+        'lwr',
     ],
     package_data={
         'live-wrapper': ['README', 'COPYING'],

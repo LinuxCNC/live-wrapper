@@ -2,17 +2,17 @@
 # (C) Iain R. Learmonth 2015 <irl@debian.org>
 # See COPYING for terms of usage, modification and redistribution.
 # 
-# lbng/grub.py - Grub 2 helpers
+# lwr/grub.py - Grub 2 helpers
 
 """
-The lbng.grub module contains helpers for GRUB 2 including the installation
+The lwr.grub module contains helpers for GRUB 2 including the installation
 of GRUB files to the cdroot and the generation of the grub.cfg and loopback.cfg
 files.
 """
 
 import os
 import shutil
-from lbng.vm import detect_kernels
+from lwr.vm import detect_kernels
 
 class GrubConfig():
     """

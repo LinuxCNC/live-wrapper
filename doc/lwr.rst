@@ -5,32 +5,32 @@ Helper Documentation
 Root Filesystem Helpers
 -----------------------
 
-.. automodule:: lbng.vm
+.. automodule:: lwr.vm
    :members:
    :undoc-members:
 
 Bootloader Helpers
 ------------------
 
-.. automodule:: lbng.grub
+.. automodule:: lwr.grub
    :members:
    :undoc-members:
 
-.. automodule:: lbng.isolinux
+.. automodule:: lwr.isolinux
    :members:
    :undoc-members:
 
 CD Filesystem Helpers
 ---------------------
 
-.. automodule:: lbng.disk
+.. automodule:: lwr.disk
    :members:
    :undoc-members:
 
 ISO Creation Helpers
 --------------------
 
-.. automodule:: lbng.xorriso
+.. automodule:: lwr.xorriso
    :members:
    :undoc-members:
 

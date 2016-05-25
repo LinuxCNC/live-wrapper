@@ -2,7 +2,7 @@
 # (C) Iain R. Learmonth 2015 <irl@debian.org>
 # See COPYING for terms of usage, modification and redistribution.
 #
-# lbng/disk.py - .disk folder helpers
+# lwr/disk.py - .disk folder helpers
 
 """
 This module provides helpers for generating the metadata stored in .disk/ on

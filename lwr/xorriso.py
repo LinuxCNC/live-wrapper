@@ -2,10 +2,10 @@
 # (C) Iain R. Learmonth 2015 <irl@debian.org>
 # See COPYING for terms of usage, modification and redistribution.
 #
-# lbng/xorriso.py - xorriso helpers
+# lwr/xorriso.py - xorriso helpers
 
 """
-The lbng.xorriso module provides helpers for calling xorriso as part of the
+The lwr.xorriso module provides helpers for calling xorriso as part of the
 image creation process.
 
 .. note::

@@ -1,3 +1,9 @@
+live-wrapper (0.4) UNRELEASED; urgency=medium
+
+  * 
+
+ -- Iain R. Learmonth <irl@debian.org>  Wed, 25 May 2016 14:01:00 +0100
+
 live-wrapper (0.3) unstable; urgency=medium
 
   * Fix handling of mirror selection for building the image.

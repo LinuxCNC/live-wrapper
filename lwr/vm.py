@@ -2,10 +2,10 @@
 # (C) Iain R. Learmonth 2015 <irl@debian.org>
 # See COPYING for terms of usage, modification and redistribution.
 #
-# lbng/vm.py - vmdebootstrap helpers
+# lwr/vm.py - vmdebootstrap helpers
 
 """
-The lbng.vm module provides helpers for calling vmdebootstrap as part of the
+The lwr.vm module provides helpers for calling vmdebootstrap as part of the
 image creation process.
 
 .. note::

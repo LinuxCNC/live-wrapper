@@ -19,11 +19,11 @@ import cliapp
 import logging
 from pycurl import Curl
 from tarfile import TarFile
-from lbng.vm import VMDebootstrap
-from lbng.isolinux import install_isolinux
-from lbng.disk import install_disk_info
-from lbng.grub import install_grub
-from lbng.xorriso import Xorriso
+from lwr.vm import VMDebootstrap
+from lwr.isolinux import install_isolinux
+from lwr.disk import install_disk_info
+from lwr.grub import install_grub
+from lwr.xorriso import Xorriso
 
 __version__ = '0.1'
 
@@ -43,7 +43,7 @@ def fetch_di_helpers():
     info.close()
 
 
-class LiveBuildNG(cliapp.Application):
+class LiveWrapper(cliapp.Application):
 
     def add_settings(self):
         self.settings.string(
@@ -105,8 +105,8 @@ class LiveBuildNG(cliapp.Application):
                                 "remove before building a fresh image.")
 
         #Make options available to customise hook in vmdebootstrap
-        os.environ['LBNG_TASK_PACKAGES'] = self.settings['tasks']
-        os.environ['LBNG_EXTRA_PACKAGES'] = self.settings['extra']
+        os.environ['LWR_TASK_PACKAGES'] = self.settings['tasks']
+        os.environ['LWR_EXTRA_PACKAGES'] = self.settings['extra']
         if self.settings['mirror'] == "":
             os.environ['MIRROR'] = self.settings['mirror']
 
@@ -138,4 +138,4 @@ class LiveBuildNG(cliapp.Application):
         xorriso.build_image()
 
 if __name__ == "__main__":
-    LiveBuildNG(version=__version__).run()
+    LiveWrapper(version=__version__).run()

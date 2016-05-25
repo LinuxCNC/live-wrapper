@@ -2,17 +2,17 @@
 # (C) Iain R. Learmonth 2015 <irl@debian.org>
 # See COPYING for terms of usage, modification and redistribution.
 # 
-# lbng/isolinux.py - ISOLINUX helpers
+# lwr/isolinux.py - ISOLINUX helpers
 
 """
-The lbng.isolinux module contains helpers for isolinux including the
+The lwr.isolinux module contains helpers for isolinux including the
 installation of isolinux files to the cdroot and the generation of the
 isolinux.cfg files.
 """
 
 import os
 import shutil
-from lbng.vm import detect_kernels
+from lwr.vm import detect_kernels
 
 class ISOLINUXConfig:
     """
