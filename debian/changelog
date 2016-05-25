@@ -1,3 +1,12 @@
+live-wrapper (0.3) unstable; urgency=medium
+
+  * Fix handling of mirror selection for building the image.
+  * Using HTTP instead of FTP for fetching the D-I helpers.
+  * Use --apt-mirror not --mirror for vmdebootstrap.
+  * Documentation updates.
+
+ -- Iain R. Learmonth <irl@debian.org>  Wed, 25 May 2016 13:26:02 +0100
+
 live-wrapper (0.2) unstable; urgency=medium
 
   * User documentation is now included.
