@@ -19,7 +19,9 @@ import cliapp
 import logging
 import pycurl
 import tempfile
+from shutil import rmtree
 from tarfile import TarFile
+
 from lwr.vm import VMDebootstrap
 from lwr.isolinux import install_isolinux
 from lwr.disk import install_disk_info
@@ -108,12 +110,10 @@ class LiveWrapper(cliapp.Application):
             have been validated.
         """
 
+        logging.info("Creating work directory...")
+
         #Create work directory
-        if not os.path.exists("cdroot"):
-            os.mkdir("cdroot")
-        else:
-            cliapp.AppException("A cdroot directory already exists. Please "
-                                "remove before building a fresh image.")
+        self.cdroot = tempfile.mkdtemp()
 
         #Make options available to customise hook in vmdebootstrap
         os.environ['LWR_TASK_PACKAGES'] = self.settings['tasks']
@@ -132,11 +132,11 @@ class LiveWrapper(cliapp.Application):
 
         #Install isolinux if selected
         if self.settings['isolinux']:
-            install_isolinux('cdroot')
+            install_isolinux(self.cdroot)
 
         #Install GRUB if selected
         if self.settings['grub'] or self.settings['grub-loopback-only']:
-            install_grub('cdroot', self.cdhelp)
+            install_grub(self.cdroot, self.cdhelp)
 
         #Install .disk information
         install_disk_info()
@@ -145,8 +145,13 @@ class LiveWrapper(cliapp.Application):
         xorriso = Xorriso(self.settings['image_output'],
                           isolinux=self.settings['isolinux'],
                           grub=self.settings['grub'])
-        xorriso.build_args()
+        xorriso.build_args(self.cdroot)
         xorriso.build_image()
+
+        #Remove the temporary directories
+        if self.cdhelp != None:
+            rmtree(self.cdhelp)
+        rmtree(self.cdroot)
 
 if __name__ == "__main__":
     LiveWrapper(version=__version__).run()

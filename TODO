@@ -1,8 +1,6 @@
 Allow custom kernel command line
 Build xorriso and vmdebootstrap args from cli options
 Pass extra options to vmdebootstrap
-Make cdroot a temporary location
-Make cdhelp a temporary location
 Validate anything downloaded by curl - check with debian-ftp or d-i how to validate
 Logging everything
 docstrings everywhere

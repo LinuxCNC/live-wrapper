@@ -29,12 +29,12 @@ class Xorriso:
         self.grub = grub
         self.args = ['xorriso']
 
-    def build_args(self):
+    def build_args(self, cdroot):
         if len(self.args) > 1:
             cliapp.AppException("Attempted to rebuild xorriso arguments while"
                                 "they are already defined!")
         self.args.extend(['-outdev', self.image_output])
-        self.args.extend(['map', 'cdroot/', '/'])
+        self.args.extend(['map', cdroot, '/'])
 
         if self.isolinux:
             self.args.extend(['-boot_image', 'isolinux', 'dir=/boot/isolinux'])
