@@ -18,6 +18,7 @@ import os
 import cliapp
 import logging
 import pycurl
+import tempfile
 from tarfile import TarFile
 from lwr.vm import VMDebootstrap
 from lwr.isolinux import install_isolinux
@@ -32,23 +33,28 @@ DI_HELPERS = 'http://ftp.debian.org/debian/dists/stretch/main/installer-amd64/cu
 def fetch_di_helpers():
     logging.info("Downloading helper files from debian-installer team...")
     try:
-        with open('info.tar.gz', 'w') as info:
+        cdhelp = tempfile.mkdtemp()
+        ditar = tempfile.mkstemp()
+        with ditar[0] as info:
             curl = pycurl.Curl()
             curl.setopt(curl.URL, DI_HELPERS)
             curl.setopt(curl.WRITEDATA, info)
             curl.perform()
             curl.close()
-        info = TarFile.open('info.tar.gz', 'r:gz')
-        if not os.path.exists('cdhelp'):
-            os.mkdir('cdhelp')
-        info.extractall(path='cdhelp/')
+        info = TarFile.open(ditar[1], 'r:gz')
+        info.extractall(path=cdhelp)
         info.close()
+        os.remove(ditar[1])
+        return cdhelp
     except pycurl.error:
         logging.error("Failed to fetch the debian-installer helper files! Cannot continue!")
         sys.exit(1)
 
-
 class LiveWrapper(cliapp.Application):
+
+    # Instance variables
+    cdroot = None # The path to the chroot the CD is being built in
+    cdhelp = None # The path to the debian-installer team helpers
 
     def add_settings(self):
         self.settings.string(
@@ -122,7 +128,7 @@ class LiveWrapper(cliapp.Application):
 
         #Fetch D-I helper archive if needed
         if self.settings['grub']:
-            fetch_di_helpers()
+            self.cdhelp = fetch_di_helpers()
 
         #Install isolinux if selected
         if self.settings['isolinux']:
@@ -130,7 +136,7 @@ class LiveWrapper(cliapp.Application):
 
         #Install GRUB if selected
         if self.settings['grub'] or self.settings['grub-loopback-only']:
-            install_grub('cdroot', 'cdhelp')
+            install_grub('cdroot', self.cdhelp)
 
         #Install .disk information
         install_disk_info()
