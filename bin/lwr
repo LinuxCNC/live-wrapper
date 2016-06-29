@@ -96,7 +96,7 @@ class LiveWrapper(cliapp.Application):
 
     def process_args(self, args):
         if not self.settings['isolinux'] and not self.settings['grub']:
-            cliapp.AppException("You must enable at least one bootloader!")
+            raise cliapp.AppException("You must enable at least one bootloader!")
         if self.settings['grub'] and self.settings['grub-loopback-only']:
             self.settings['grub'] = False
         if os.geteuid() != 0:

@@ -1,0 +1,12 @@
+# Fast option check tests
+
+This chapter contains fast scenarios that test lwr option
+handling. These scenarios do not actually build images, they only
+verify that lwr parses the command line correctly.
+
+    SCENARIO neither --isolinux nor --grub specified
+    ASSUMING fast tests are requested
+    WHEN user attempts to run lwr
+    ... --no-isolinux --no-grub
+    THEN lwr exited with a non-zero exit code
+    AND lwr wrote an error message matching bootloader
