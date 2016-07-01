@@ -2,3 +2,4 @@
 *.swp
 doc/_build
 *.log
+local
