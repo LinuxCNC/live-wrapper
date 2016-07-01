@@ -13,6 +13,8 @@ intended to be run from the command line.
 See live-wrapper(8) for more information.
 """
 
+# pylint: disable=wrong-import-order,missing-docstring
+
 import sys
 import os
 import cliapp
@@ -21,35 +23,76 @@ import pycurl
 import tempfile
 from shutil import rmtree
 from tarfile import TarFile
-
 from lwr.vm import VMDebootstrap
-from lwr.isolinux import install_isolinux
+from lwr.isolinux import install_isolinux, update_isolinux
 from lwr.disk import install_disk_info
-from lwr.grub import install_grub
+from lwr.grub import install_grub, update_grub
 from lwr.xorriso import Xorriso
+from lwr.apt_udeb import AptUdebDownloader
 
 __version__ = '0.4'
 
-DI_HELPERS = ('http://ftp.debian.org/debian/dists/stretch/main/' +
-              'installer-amd64/current/images/cdrom/debian-cd_info.tar.gz')
+DI_BASE = 'http://ftp.debian.org/debian/dists/stretch/main/'
+KERNEL = 'vmlinuz'
+RAMDISK = 'initrd.gz'
+DI_KERNEL = (DI_BASE + 'installer-amd64/current/images/cdrom/' + KERNEL)
+DI_RAMDISK = (DI_BASE + 'installer-amd64/current/images/cdrom/' + RAMDISK)
+# Not used yet but may be good to have
+# DI_KERNEL_GTK = (DI_BASE + 'installer-amd64/current/images/cdrom/gtk/' + KERNEL)
+# DI_RAMDISK_GTK = (DI_BASE + 'installer-amd64/current/images/cdrom/gtk/' + RAMDISK)
+
+DI_HELPERS = (
+    DI_BASE + 'installer-amd64/current/images/cdrom/debian-cd_info.tar.gz')
+# DI_HELPERS_GTK = (
+#     DI_BASE + 'installer-amd64/current/images/cdrom/gtk/debian-cd_info.tar.gz')
 
 
 def fetch_di_helpers():
     logging.info("Downloading helper files from debian-installer team...")
     try:
         cdhelp = tempfile.mkdtemp()
-        ditar = tempfile.mkstemp()
-        with ditar[0] as info:
+        os.makedirs(os.path.join(cdhelp, 'd-i'))
+        kernel_path = os.path.join(cdhelp, 'd-i', KERNEL)
+        ramdisk_path = os.path.join(cdhelp, 'd-i', RAMDISK)
+        # python3 only
+        if sys.version_info > (3, 0):
+            ditar = tempfile.mkstemp()
+            with ditar[0] as info:
+                curl = pycurl.Curl()
+                curl.setopt(curl.URL, DI_HELPERS)
+                curl.setopt(curl.WRITEDATA, info)
+                curl.perform()
+                curl.close()
+            info = TarFile.open(ditar[1], 'r:gz')
+            info.extractall(path=cdhelp)
+            info.close()
+            os.remove(ditar[1])
+        # python 2
+        else:
+            ditar = tempfile.NamedTemporaryFile(delete=False)
             curl = pycurl.Curl()
             curl.setopt(curl.URL, DI_HELPERS)
-            curl.setopt(curl.WRITEDATA, info)
+            curl.setopt(curl.WRITEDATA, ditar)
             curl.perform()
             curl.close()
-        info = TarFile.open(ditar[1], 'r:gz')
-        info.extractall(path=cdhelp)
-        info.close()
-        os.remove(ditar[1])
-        return cdhelp
+            ditar.close()
+            info = TarFile.open(ditar.name, 'r:gz')
+            info.extractall(path=cdhelp)
+            info.close()
+            os.remove(ditar.name)
+        with open(kernel_path, 'w') as kernel:
+            curl = pycurl.Curl()
+            curl.setopt(curl.URL, DI_KERNEL)
+            curl.setopt(curl.WRITEDATA, kernel)
+            curl.perform()
+            curl.close()
+        with open(ramdisk_path, 'w') as ramdisk:
+            curl = pycurl.Curl()
+            curl.setopt(curl.URL, DI_RAMDISK)
+            curl.setopt(curl.WRITEDATA, ramdisk)
+            curl.perform()
+            curl.close()
+        return (cdhelp, kernel_path, ramdisk_path)
     except pycurl.error:
         logging.error("Failed to fetch the debian-installer helper files! " +
                       "Cannot continue!")
@@ -61,6 +104,10 @@ class LiveWrapper(cliapp.Application):
     # Instance variables
     cdroot = None  # The path to the chroot the CD is being built in
     cdhelp = None  # The path to the debian-installer team helpers
+    di_kernel = None
+    di_ramdisk = None
+    gtk_di_kernel = None
+    gtk_di_ramdisk = None
 
     def add_settings(self):
         self.settings.string(
@@ -113,6 +160,7 @@ class LiveWrapper(cliapp.Application):
             have been validated.
         """
 
+        print("Creating work directory...")
         logging.info("Creating work directory...")
 
         # Create work directory
@@ -127,6 +175,7 @@ class LiveWrapper(cliapp.Application):
             os.environ['MIRROR'] = self.settings['mirror']
 
         logging.info("Running vmdebootstrap...")
+        print("Running vmdebootstrap...")
 
         # Run vmdebootstrap
         vm = VMDebootstrap(self.settings['distribution'],
@@ -135,17 +184,46 @@ class LiveWrapper(cliapp.Application):
 
         # Fetch D-I helper archive if needed
         if self.settings['grub']:
-            self.cdhelp = fetch_di_helpers()
+            print("Fetching Debian Installer helpers")
+            helpers = fetch_di_helpers()
+            self.cdhelp = helpers[0]
+            self.di_kernel = helpers[1]
+            self.di_ramdisk = helpers[2]
+
+        # Download the udebs
+        print("Downloading udebs for Debian Installer...")  # FIXME: self.message()
+        logging.info("Downloading udebs for Debian Installer...")
+        # FIXME: get exclude_list from user
+        exclude_list = []
+        # FIXME: may need a change to the download location
+        di_root = os.path.join(self.cdroot, 'd-i')
+        os.makedirs(di_root)
+        apt_udeb = AptUdebDownloader(destdir=di_root)
+        apt_udeb.mirror = self.settings['mirror']
+        apt_udeb.architecture = 'amd64'  # FIXME: self.settings
+        apt_udeb.suite = self.settings['distribution']
+        print("Updating cache...")  # FIXME: self.message()
+        logging.debug("Updating cache...")
+        apt_udeb.prepare_apt()
+        # FIXME: add support for a custom apt source on top.
+
+        # download all udebs in the suite, except exclude_list
+        apt_udeb.download_udebs(exclude_list)
+        apt_udeb.clean_up_apt()
+        print("... completed udeb downloads", self.cdroot)
+        logging.info("... completed udeb downloads")
 
         # Install isolinux if selected
         if self.settings['isolinux']:
             logging.info("Performing isolinux installation...")
             install_isolinux(self.cdroot)
+            update_di_isolinux(self.di_kernel, self.di_ramdisk)
 
         # Install GRUB if selected
         if self.settings['grub'] or self.settings['grub-loopback-only']:
             logging.info("Performing GRUB installation...")
             install_grub(self.cdroot, self.cdhelp)
+            update_di_grub(self.di_kernel, self.di_ramdisk)
 
         # Install .disk information
         logging.info("Installing the disk metadata (badly)...")

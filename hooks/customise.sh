@@ -11,7 +11,9 @@ trap cleanup 0
 
 mount_support
 disable_daemons
-prepare_apt_source
+# FIXME: pass the specified build mirror.
+prepare_apt_source 'http://mirror.bytemark.co.uk/debian' 'stable'
+# prepare_apt_source 'file:///home/neil/mirror/debian' 'stable'
 
 chroot ${rootdir} apt-get -y install initramfs-tools live-boot live-config ${LWR_TASK_PACKAGES} ${LWR_EXTRA_PACKAGES} task-laptop task-english
 

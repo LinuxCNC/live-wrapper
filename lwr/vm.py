@@ -22,7 +22,7 @@ class VMDebootstrap:
     def __init__(self, distribution, mirror=None):
         self.args = ["vmdebootstrap",
                      "--sudo", "--lock-root-password",
-                     "--enable-dhcp", "--configure-apt",
+                     "--enable-dhcp", "--configure-apt", "--verbose",
                      "--log", "vmdebootstrap.log", "--squash=cdroot/live/",
                      "--log-level", "debug", "--customize",
                      "hooks/customise.sh"]
@@ -30,10 +30,16 @@ class VMDebootstrap:
         self.args.extend(["--distribution", distribution])
 
         if mirror is not None:
-            self.args.extend(["--apt-mirror", mirror])
+            # specify the local mirror used to build the vm
+            self.args.extend(["--mirror", mirror])
+            # FIXME: apt-mirror is for what the booted image will use
+            # this should not be the local mirror used to build the vm
+            self.args.extend(["--apt-mirror", 'http://mirror.dc16.debconf.org/debian'])
 
     def run(self):
-        runcmd(self.args)
+        print(' '.join(self.args))
+        runcmd(self.args)  # FIXME: may want to use a method which prints output in realtime
+        print('vmdebootstrap complete')
 
 
 def detect_kernels(cdroot):

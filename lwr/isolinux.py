@@ -14,8 +14,10 @@ import os
 import shutil
 from lwr.vm import detect_kernels
 
+# pylint: disable=missing-docstring
 
-class ISOLINUXConfig:
+
+class ISOLINUXConfig(object):
     """
     Helper class that creates an ISOLINUX configuration based on a
     vmdebootstrap squashfs output directory.
@@ -41,6 +43,15 @@ class ISOLINUXConfig:
             first = False
         return ret
 
+    def generate_di_cfg(self, kernel, ramdisk):  # pylint: disable=no-self-use
+        ret = "\n"
+        ret += "LABEL Debian Installer\n"
+        ret += "  SAY Booting Debian Installer...\" {\n"
+        ret += "  KERNEL /d-i/%s\n" % kernel
+        ret += "  APPEND initrd=/d-i/%s-%s\n" % ramdisk
+        ret += "}\n"
+        return ret
+
 
 def install_isolinux(cdroot):
     if not os.path.exists("%s/boot" % (cdroot,)):
@@ -53,3 +64,10 @@ def install_isolinux(cdroot):
                     "%s/isolinux.bin" % (ISOLINUX_DIR,))
     with open("%s/isolinux.cfg" % (ISOLINUX_DIR,), "w") as cfgout:
         cfgout.write(ISOLINUXConfig(cdroot).generate_cfg())
+
+
+def update_isolinux(cdroot, kernel, ramdisk):
+    isolinux_dir = "%s/boot/isolinux" % (cdroot,)
+    with open("%s/isolinux.cfg" % (isolinux_dir,), "a") as cfgout:
+        # FIXME: spurious call to detect_kernels here
+        cfgout.write(ISOLINUXConfig(cdroot).generate_di_cfg(kernel, ramdisk))
