@@ -88,7 +88,6 @@ class AptUdebDownloader(object):
             pkg = self.cache[pkg_name]
             if not hasattr(pkg, 'versions'):
                 continue
-            os.makedirs(pkg_dir)
             if len(pkg.versions) > 1:
                 pkg.version_list.sort(apt_pkg.version_compare)
                 version = pkg.version_list[0]
@@ -97,6 +96,7 @@ class AptUdebDownloader(object):
                 version = pkg.versions[0]
             if not version.uri:
                 continue
+            os.makedirs(pkg_dir)
             # FIXME: still need a Packages file and Release.
             try:
                 version.fetch_binary(destdir=pkg_dir)
