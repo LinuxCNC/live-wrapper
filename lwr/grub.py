@@ -28,6 +28,7 @@ class GrubConfig(object):
     def generate_cfg(self):
         ret = ("if [ ${iso_path} ] ; then\nset loopback=\"" +
                "findiso=${iso_path}\"\nfi\n\n")
+        # FIXME: identify grub module prefix, e.g. boot/grub/x86_64-efi
         self.versions.sort(reverse=True)
         for version in self.versions:
             ret += "menuentry \"Debian GNU/Linux Live (kernel %s)\" {\n" % (version,)

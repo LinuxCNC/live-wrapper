@@ -73,48 +73,8 @@ The steps in this section do static tests of disk image. These all
 operate on the image specified in the step "GIVEN user wants to
 build...".
 
-Test the size of an image. This tests the length, not disk usage, of
-the image.
+# isoinfo -i jessie-live-uefi.iso -ld
+# CD-ROM is in ISO 9660 format
+# El Torito VD version 1 found, boot catalog is in sector 3031
+#         Bootid 88 (bootable)
 
-    IMPLEMENTS THEN the image has the correct size
-    actual="$(stat -c %s "$IMAGE")"
-    [ "$actual" = "$IMAGE_SIZE" ]
-
-Check the partition table on the image.
-
-    IMPLEMENTS THEN the partition count of the image is (\d+)
-    parted --script "$IMAGE" print |
-        sed '1,/^Number/d' |
-        grep -c . |
-        grep -Fx $MATCH_1
-
-Check partition boot flag.
-
-    IMPLEMENTS THEN partition (\d+) has the boot flag set
-    parted --script "$IMAGE" print |
-        awk -v "PART=$MATCH_1" '/^ [0-9]+ / && $1 == PART && $7 ~ "^boot,?$"' |
-        grep .
-
-    IMPLEMENTS THEN partition (\d+) has the lba flag set
-    parted --script "$IMAGE" print |
-        awk -v "PART=$MATCH_1" '/^ [0-9]+ / && $1 == PART && $8 ~ "^lba?$"' |
-        grep .
-
-Check filesystem on a partition. This checks the actual filesystem,
-not a type declared in the partition table.
-
-    IMPLEMENTS THEN partition (\d+) has an? (\S+) filesystem
-    device="$(kpartx_image_partition "$IMAGE" "$MATCH_1")"
-    trap "unkpartx_image \"$IMAGE\"" EXIT
-    blkid "$device" | grep "TYPE=\"$MATCH_2\""
-
-Check that the partition contains a file with some content matching a
-regular expression.
-
-    IMPLEMENTS THEN partition (\d+) has file (\S+) matching (.+)
-    device="$(kpartx_image_partition "$IMAGE" "$MATCH_1")"
-    trap "unkpartx_image \"$IMAGE\"" EXIT
-    mp="$(mktemp -d)"
-    mount -r "$device" "$mp"
-    trap "umount \"$mp\"; unkpartx_image \"$IMAGE\"" EXIT
-    grep -P -e "$MATCH_3" "$mp/$MATCH_2"

@@ -19,12 +19,12 @@ from vmdebootstrap.base import runcmd
 
 class VMDebootstrap:
 
-    def __init__(self, distribution, mirror=None):
+    def __init__(self, distribution, mirror=None, cdroot='/tmp/'):
         self.args = ["vmdebootstrap",
                      "--sudo", "--lock-root-password",
                      "--enable-dhcp", "--configure-apt", "--verbose",
-                     "--log", "vmdebootstrap.log", "--squash=cdroot/live/",
-                     "--log-level", "debug", "--customize",
+                     "--log", "vmdebootstrap.log", "--squash=%s/live/" % cdroot,
+                     "--log-level", "debug", "--customize", "--use-uefi",
                      "hooks/customise.sh"]
 
         self.args.extend(["--distribution", distribution])

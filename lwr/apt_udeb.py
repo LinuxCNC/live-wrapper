@@ -75,7 +75,15 @@ class AptUdebDownloader(object):
     def download_udebs(self, exclude_list):
         if not self.cache:
             raise RuntimeError('No cache available.')
+        main_pool = os.path.join(self.destdir, 'pool', 'main')
+        os.makedirs(main_pool)
         for pkg_name in self.cache.keys():
+            prefix = pkg_name[0]
+            # destdir is just a base, needs pool/main/[index]/[name]
+            if pkg_name[:3] == 'lib':
+                prefix = pkg_name[:4]
+            pkg_dir = os.path.join(main_pool, prefix, pkg_name)
+            os.makedirs(pkg_dir)
             if pkg_name in exclude_list:
                 continue
             pkg = self.cache[pkg_name]
@@ -89,8 +97,9 @@ class AptUdebDownloader(object):
                 version = pkg.versions[0]
             if not version.uri:
                 continue
+            # FIXME: still need a Packages file and Release.
             try:
-                version.fetch_binary(destdir=self.destdir)
+                version.fetch_binary(destdir=pkg_dir)
             except TypeError as exc:
                 continue
             except apt.package.FetchError as exc:

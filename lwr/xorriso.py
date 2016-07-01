@@ -44,7 +44,6 @@ class Xorriso:
             self.args.extend(['-as', 'mkisofs', '-eltorito-alt-boot', '-e',
                               'boot/grub/efi.img', '-no-emul-boot',
                               '-isohybrid-gpt-basdat'])
-
         return self.args
 
     def build_image(self):
@@ -61,4 +60,5 @@ class Xorriso:
         if len(self.args) == 1:
             cliapp.AppException("Attempted to run xorriso before building "
                                 "arguments!")
+        print(self.args)
         runcmd(self.args)

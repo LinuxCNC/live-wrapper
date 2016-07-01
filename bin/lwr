@@ -145,6 +145,8 @@ class LiveWrapper(cliapp.Application):
             '(default: %default)', default=False, group="Bootloaders")
 
     def process_args(self, args):
+        if os.path.exists(self.settings['image_output']):
+            raise cliapp.AppException("Image '%s' already exists" % self.settings['image_output'])
         if not self.settings['isolinux'] and not self.settings['grub']:
             raise cliapp.AppException("You must enable at least one bootloader!")
         if self.settings['grub'] and self.settings['grub-loopback-only']:
@@ -180,9 +182,9 @@ class LiveWrapper(cliapp.Application):
         logging.info("Running vmdebootstrap...")
         print("Running vmdebootstrap...")
 
-        # Run vmdebootstrap
+        # Run vmdebootstrap, putting files in /live/
         vm = VMDebootstrap(self.settings['distribution'],
-                           self.settings['mirror'])
+                           self.settings['mirror'], self.cdroot)
         vm.run()
 
         # Fetch D-I helper archive if needed
