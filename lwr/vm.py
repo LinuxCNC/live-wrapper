@@ -34,7 +34,7 @@ class VMDebootstrap:
             self.args.extend(["--mirror", mirror])
             # FIXME: apt-mirror is for what the booted image will use
             # this should not be the local mirror used to build the vm
-            self.args.extend(["--apt-mirror", 'http://mirror.dc16.debconf.org/debian'])
+            self.args.extend(["--apt-mirror", 'http://localhost/mirror/debian'])
 
     def run(self):
         print(' '.join(self.args))
@@ -42,9 +42,9 @@ class VMDebootstrap:
         print('vmdebootstrap complete')
 
 
-def detect_kernels(cdroot):
+def detect_kernels():
     versions = []
-    filenames = os.listdir("%s/live" % (cdroot,))
+    filenames = os.listdir("cdroot/live")  # static directory for squashfs support
     for filename in filenames:
         if filename[0:8] == "vmlinuz-":
             versions.append(filename[8:])

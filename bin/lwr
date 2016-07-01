@@ -13,7 +13,7 @@ intended to be run from the command line.
 See live-wrapper(8) for more information.
 """
 
-# pylint: disable=wrong-import-order,missing-docstring
+# pylint: disable=wrong-import-order,missing-docstring,superfluous-parens
 
 import sys
 import os
@@ -32,9 +32,12 @@ from lwr.apt_udeb import AptUdebDownloader
 
 __version__ = '0.4'
 
-DI_BASE = 'http://ftp.debian.org/debian/dists/stretch/main/'
+# FIXME: needs to be a setting to allow for local full mirrors
+# DI_BASE = 'http://ftp.debian.org/debian/dists/stretch/main/'
+DI_BASE = 'http://localhost/mirror/debian/dists/stretch/main/'
 KERNEL = 'vmlinuz'
 RAMDISK = 'initrd.gz'
+# FIXME: needs to allow for architecture setting
 DI_KERNEL = (DI_BASE + 'installer-amd64/current/images/cdrom/' + KERNEL)
 DI_RAMDISK = (DI_BASE + 'installer-amd64/current/images/cdrom/' + RAMDISK)
 # Not used yet but may be good to have
@@ -69,7 +72,7 @@ def fetch_di_helpers():
             os.remove(ditar[1])
         # python 2
         else:
-            ditar = tempfile.NamedTemporaryFile(delete=False)
+            ditar = tempfile.NamedTemporaryFile(delete=False)  # pylint: disable=redefined-variable-type
             curl = pycurl.Curl()
             curl.setopt(curl.URL, DI_HELPERS)
             curl.setopt(curl.WRITEDATA, ditar)
@@ -150,7 +153,7 @@ class LiveWrapper(cliapp.Application):
             sys.exit("You need to have root privileges to run this script.")
         self.start_ops()
 
-    def start_ops(self):
+    def start_ops(self):  # pylint: disable=too-many-statements
         """
         This function creates the live image using the settings determined by
         the arguments passed on the command line.
@@ -217,13 +220,13 @@ class LiveWrapper(cliapp.Application):
         if self.settings['isolinux']:
             logging.info("Performing isolinux installation...")
             install_isolinux(self.cdroot)
-            update_di_isolinux(self.di_kernel, self.di_ramdisk)
+            update_isolinux(self.cdroot, self.di_kernel, self.di_ramdisk)
 
         # Install GRUB if selected
         if self.settings['grub'] or self.settings['grub-loopback-only']:
             logging.info("Performing GRUB installation...")
             install_grub(self.cdroot, self.cdhelp)
-            update_di_grub(self.di_kernel, self.di_ramdisk)
+            update_grub(self.cdroot, self.di_kernel, self.di_ramdisk)
 
         # Install .disk information
         logging.info("Installing the disk metadata (badly)...")

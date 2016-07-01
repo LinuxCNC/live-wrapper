@@ -22,8 +22,8 @@ class GrubConfig(object):
     vmdebootstrap squashfs output directory.
     """
 
-    def __init__(self, cdroot):
-        self.versions = detect_kernels(cdroot)
+    def detect(self):
+        self.versions = detect_kernels()
 
     def generate_cfg(self):
         ret = ("if [ ${iso_path} ] ; then\nset loopback=\"" +
@@ -42,17 +42,20 @@ class GrubConfig(object):
         ret += "  linux  /d-i/%s\"\n" % kernel
         ret += "  initrd /d-i/%s\n" % ramdisk
         ret += "}\n"
+        return ret
 
 
 def install_grub(cdroot, cdhelp):
     shutil.copytree("%s/grub" % (cdhelp,), "%s/boot/grub" % (cdroot,))
+    config = GrubConfig()
+    config.detect()
     with open("%s/boot/grub/grub.cfg" % (cdroot,), "a") as cfgout:
-        cfgout.write(GrubConfig(cdroot).generate_cfg())
+        cfgout.write(config.generate_cfg())
     with open("%s/boot/grub/loopback.cfg" % (cdroot,), "w") as loopout:
         loopout.write("source /boot/grub/grub.cfg")
 
 
 def update_grub(cdroot, kernel, ramdisk):
+    config = GrubConfig()
     with open("%s/boot/grub/grub.cfg" % (cdroot,), "a") as cfgout:
-        # FIXME: spurious call to detect_kernels here
-        cfgout.write(GrubConfig(cdroot).generate_di_cfg(kernel, ramdisk))
+        cfgout.write(config.generate_di_cfg(kernel, ramdisk))

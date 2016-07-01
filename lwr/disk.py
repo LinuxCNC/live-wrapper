@@ -18,6 +18,8 @@ def install_disk_info():
     cdroot.
     """
 
-    os.mkdir("cdroot/.disk")
+    # this is not a temporary directory
+    if not os.path.exists("cdroot/.disk"):
+        os.mkdir("cdroot/.disk")
     with open("cdroot/.disk/info", "w") as i:
         i.write("HELLO")

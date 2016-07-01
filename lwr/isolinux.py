@@ -23,8 +23,8 @@ class ISOLINUXConfig(object):
     vmdebootstrap squashfs output directory.
     """
 
-    def __init__(self, cdroot):
-        self.versions = detect_kernels(cdroot)
+    def detect(self):
+        self.versions = detect_kernels()
 
     def generate_cfg(self):
         ret = str()
@@ -58,16 +58,19 @@ def install_isolinux(cdroot):
         os.mkdir("%s/boot" % (cdroot,))
     ISOLINUX_DIR = "%s/boot/isolinux" % (cdroot,)
     os.mkdir(ISOLINUX_DIR)
+    # FIXME: cannot depend on sysvinit-common - could be the wrong arch or suite
     shutil.copyfile("/usr/lib/syslinux/modules/bios/ldlinux.c32",
                     "%s/ldlinux.c32" % (ISOLINUX_DIR,))
     shutil.copyfile("/usr/lib/ISOLINUX/isolinux.bin",
                     "%s/isolinux.bin" % (ISOLINUX_DIR,))
+    config = ISOLINUXConfig()
+    config.detect()
     with open("%s/isolinux.cfg" % (ISOLINUX_DIR,), "w") as cfgout:
-        cfgout.write(ISOLINUXConfig(cdroot).generate_cfg())
+        cfgout.write(config.generate_cfg())
 
 
 def update_isolinux(cdroot, kernel, ramdisk):
     isolinux_dir = "%s/boot/isolinux" % (cdroot,)
+    config = ISOLINUXConfig()
     with open("%s/isolinux.cfg" % (isolinux_dir,), "a") as cfgout:
-        # FIXME: spurious call to detect_kernels here
-        cfgout.write(ISOLINUXConfig(cdroot).generate_di_cfg(kernel, ramdisk))
+        cfgout.write(config.generate_di_cfg(kernel, ramdisk))
