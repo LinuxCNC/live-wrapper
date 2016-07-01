@@ -20,6 +20,7 @@ from vmdebootstrap.base import runcmd
 class VMDebootstrap:
 
     def __init__(self, distribution, mirror=None, cdroot='/tmp/'):
+        # FIXME: needs to be arch dependent, esp. for --use-uefi/isolinux/grub support.
         self.args = ["vmdebootstrap",
                      "--sudo", "--lock-root-password",
                      "--enable-dhcp", "--configure-apt", "--verbose",

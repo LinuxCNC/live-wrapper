@@ -83,12 +83,12 @@ class AptUdebDownloader(object):
             if pkg_name[:3] == 'lib':
                 prefix = pkg_name[:4]
             pkg_dir = os.path.join(main_pool, prefix, pkg_name)
-            os.makedirs(pkg_dir)
             if pkg_name in exclude_list:
                 continue
             pkg = self.cache[pkg_name]
             if not hasattr(pkg, 'versions'):
                 continue
+            os.makedirs(pkg_dir)
             if len(pkg.versions) > 1:
                 pkg.version_list.sort(apt_pkg.version_compare)
                 version = pkg.version_list[0]
