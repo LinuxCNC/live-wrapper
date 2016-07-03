@@ -33,6 +33,8 @@ setup(
     install_requires=[
         'cliapp >= 1.20150829',
         'vmdebootstrap',
+        'requests',
+        'apt'
     ],
     scripts=['bin/lwr']
 )

@@ -16,8 +16,9 @@ image creation process.
 import cliapp
 from vmdebootstrap.base import runcmd
 
+# pylint: disable=missing-docstring,superfluous-parens
 
-class Xorriso:
+class Xorriso(object):
     """
     This class acts as a wrapper for ``xorriso`` and allows for the command
     line arguments passed to be built based on the settings given to the main
@@ -38,11 +39,11 @@ class Xorriso:
         self.args.extend(['map', cdroot, '/'])
 
         if self.isolinux:
-            self.args.extend(['-boot_image', 'isolinux', 'dir=/boot/isolinux'])
+            self.args.extend(['-boot_image', 'isolinux', 'dir=/isolinux'])
 
         if self.grub:
             self.args.extend(['-as', 'mkisofs', '-eltorito-alt-boot', '-e',
-                              'boot/grub/efi.img', '-no-emul-boot',
+                              'grub/efi.img', '-no-emul-boot',
                               '-isohybrid-gpt-basdat'])
         return self.args
 

@@ -10,7 +10,6 @@ of GRUB files to the cdroot and the generation of the grub.cfg and loopback.cfg
 files.
 """
 
-import shutil
 from lwr.vm import detect_kernels
 
 # pylint: disable=missing-docstring
@@ -22,13 +21,17 @@ class GrubConfig(object):
     vmdebootstrap squashfs output directory.
     """
 
+    def __init__(self, cdroot):
+        self.cdroot = cdroot
+        self.versions = None
+
     def detect(self):
-        self.versions = detect_kernels()
+        self.versions = detect_kernels(self.cdroot)
 
     def generate_cfg(self):
         ret = ("if [ ${iso_path} ] ; then\nset loopback=\"" +
                "findiso=${iso_path}\"\nfi\n\n")
-        # FIXME: identify grub module prefix, e.g. boot/grub/x86_64-efi
+        # FIXME: identify grub module prefix, e.g. grub/x86_64-efi
         self.versions.sort(reverse=True)
         for version in self.versions:
             ret += "menuentry \"Debian GNU/Linux Live (kernel %s)\" {\n" % (version,)
@@ -46,17 +49,16 @@ class GrubConfig(object):
         return ret
 
 
-def install_grub(cdroot, cdhelp):
-    shutil.copytree("%s/grub" % (cdhelp,), "%s/boot/grub" % (cdroot,))
-    config = GrubConfig()
+def install_grub(cdroot):
+    config = GrubConfig(cdroot)
     config.detect()
-    with open("%s/boot/grub/grub.cfg" % (cdroot,), "a") as cfgout:
+    with open("%s/grub/grub.cfg" % (cdroot,), "a") as cfgout:
         cfgout.write(config.generate_cfg())
-    with open("%s/boot/grub/loopback.cfg" % (cdroot,), "w") as loopout:
-        loopout.write("source /boot/grub/grub.cfg")
+    with open("%s/grub/loopback.cfg" % (cdroot,), "w") as loopout:
+        loopout.write("source /grub/grub.cfg")
 
 
 def update_grub(cdroot, kernel, ramdisk):
-    config = GrubConfig()
-    with open("%s/boot/grub/grub.cfg" % (cdroot,), "a") as cfgout:
+    config = GrubConfig(cdroot)
+    with open("%s/grub/grub.cfg" % (cdroot,), "a") as cfgout:
         cfgout.write(config.generate_di_cfg(kernel, ramdisk))

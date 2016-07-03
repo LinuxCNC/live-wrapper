@@ -21,6 +21,7 @@ import cliapp
 import logging
 import pycurl
 import tempfile
+import subprocess
 from shutil import rmtree
 from tarfile import TarFile
 from lwr.vm import VMDebootstrap
@@ -29,90 +30,35 @@ from lwr.disk import install_disk_info
 from lwr.grub import install_grub, update_grub
 from lwr.xorriso import Xorriso
 from lwr.apt_udeb import AptUdebDownloader
+from lwr.utils import cdrom_image_url, KERNEL, RAMDISK
 
 __version__ = '0.4'
 
-# FIXME: needs to be a setting to allow for local full mirrors
-# DI_BASE = 'http://ftp.debian.org/debian/dists/stretch/main/'
-DI_BASE = 'http://localhost/mirror/debian/dists/stretch/main/'
-KERNEL = 'vmlinuz'
-RAMDISK = 'initrd.gz'
-# FIXME: needs to allow for architecture setting
-DI_KERNEL = (DI_BASE + 'installer-amd64/current/images/cdrom/' + KERNEL)
-DI_RAMDISK = (DI_BASE + 'installer-amd64/current/images/cdrom/' + RAMDISK)
-# Not used yet but may be good to have
-# DI_KERNEL_GTK = (DI_BASE + 'installer-amd64/current/images/cdrom/gtk/' + KERNEL)
-# DI_RAMDISK_GTK = (DI_BASE + 'installer-amd64/current/images/cdrom/gtk/' + RAMDISK)
+# pylint: disable=line-too-long,too-many-function-args
 
-DI_HELPERS = (
-    DI_BASE + 'installer-amd64/current/images/cdrom/debian-cd_info.tar.gz')
-# DI_HELPERS_GTK = (
-#     DI_BASE + 'installer-amd64/current/images/cdrom/gtk/debian-cd_info.tar.gz')
-
-
-def fetch_di_helpers():
-    logging.info("Downloading helper files from debian-installer team...")
-    try:
-        cdhelp = tempfile.mkdtemp()
-        os.makedirs(os.path.join(cdhelp, 'd-i'))
-        kernel_path = os.path.join(cdhelp, 'd-i', KERNEL)
-        ramdisk_path = os.path.join(cdhelp, 'd-i', RAMDISK)
-        # python3 only
-        if sys.version_info > (3, 0):
-            ditar = tempfile.mkstemp()
-            with ditar[0] as info:
-                curl = pycurl.Curl()
-                curl.setopt(curl.URL, DI_HELPERS)
-                curl.setopt(curl.WRITEDATA, info)
-                curl.perform()
-                curl.close()
-            info = TarFile.open(ditar[1], 'r:gz')
-            info.extractall(path=cdhelp)
-            info.close()
-            os.remove(ditar[1])
-        # python 2
-        else:
-            ditar = tempfile.NamedTemporaryFile(delete=False)  # pylint: disable=redefined-variable-type
-            curl = pycurl.Curl()
-            curl.setopt(curl.URL, DI_HELPERS)
-            curl.setopt(curl.WRITEDATA, ditar)
-            curl.perform()
-            curl.close()
-            ditar.close()
-            info = TarFile.open(ditar.name, 'r:gz')
-            info.extractall(path=cdhelp)
-            info.close()
-            os.remove(ditar.name)
-        with open(kernel_path, 'w') as kernel:
-            curl = pycurl.Curl()
-            curl.setopt(curl.URL, DI_KERNEL)
-            curl.setopt(curl.WRITEDATA, kernel)
-            curl.perform()
-            curl.close()
-        with open(ramdisk_path, 'w') as ramdisk:
-            curl = pycurl.Curl()
-            curl.setopt(curl.URL, DI_RAMDISK)
-            curl.setopt(curl.WRITEDATA, ramdisk)
-            curl.perform()
-            curl.close()
-        return (cdhelp, kernel_path, ramdisk_path)
-    except pycurl.error:
-        logging.error("Failed to fetch the debian-installer helper files! " +
-                      "Cannot continue!")
-        sys.exit(1)
+directories = {
+    'cdroot': '/',  # fetch_di_helpers
+    'grub': '%s/grub/' % 'cdroot',  # created by fetch_di_helpers
+    'd-i': {
+        '%s/d-i/gtk' % 'cdroot',  # installer kernel & ramdisk
+        '%s/pool/' % 'cdroot',
+        '%s/dists/' % 'cdroot',
+    },
+    'metadata': '%s/.disk' % 'cdroot',  # disk.py
+    'isolinux': '%s/isolinux' % 'cdroot',
+    'live': '%s/live/' % 'cdroot',
+}
 
 
 class LiveWrapper(cliapp.Application):
 
     # Instance variables
     cdroot = None  # The path to the chroot the CD is being built in
-    cdhelp = None  # The path to the debian-installer team helpers
-    di_kernel = None
-    di_ramdisk = None
-    gtk_di_kernel = None
-    gtk_di_ramdisk = None
+    kernel_path = None
+    ramdisk_path = None
 
     def add_settings(self):
+        default_arch = subprocess.check_output(["dpkg", "--print-architecture"]).decode('utf-8').strip()
         self.settings.string(
             ['o', 'image_output'], 'Location for built image',
             metavar='/PATH/TO/FILE.ISO',
@@ -121,6 +67,9 @@ class LiveWrapper(cliapp.Application):
             ['d', 'distribution'], 'Debian release to use (default: %default)',
             metavar='NAME',
             default='stable', group='Base Settings')
+        self.settings.string(
+            ['architecture'], 'architecture to use (%default)',
+            metavar='ARCH', default=default_arch)
         self.settings.string(
             ['m', 'mirror'], 'Mirror to use for image creation',
             metavar='MIRROR',
@@ -155,6 +104,56 @@ class LiveWrapper(cliapp.Application):
             sys.exit("You need to have root privileges to run this script.")
         self.start_ops()
 
+    def fetch_di_helpers(self, mirror, suite, architecture):
+        logging.info("Downloading helper files from debian-installer team...")
+        urls = cdrom_image_url(mirror, suite, architecture, gtk=False)
+        try:
+            os.makedirs(os.path.join(self.cdroot, 'd-i'))
+            self.kernel_path = os.path.join(self.cdroot, 'd-i', KERNEL)
+            self.ramdisk_path = os.path.join(self.cdroot, 'd-i', RAMDISK)
+            # python3 only
+            if sys.version_info > (3, 0):
+                ditar = tempfile.mkstemp()
+                with ditar[0] as info:
+                    curl = pycurl.Curl()
+                    curl.setopt(curl.URL, urls[3])
+                    curl.setopt(curl.WRITEDATA, info)
+                    curl.perform()
+                    curl.close()
+                info = TarFile.open(ditar[1], 'r:gz')
+                info.extractall(path=self.cdroot)
+                info.close()
+                os.remove(ditar[1])
+            # python 2
+            else:
+                ditar = tempfile.NamedTemporaryFile(delete=False)  # pylint: disable=redefined-variable-type
+                curl = pycurl.Curl()
+                curl.setopt(curl.URL, urls[3])
+                curl.setopt(curl.WRITEDATA, ditar)
+                curl.perform()
+                curl.close()
+                ditar.close()
+                info = TarFile.open(ditar.name, 'r:gz')
+                info.extractall(path=self.cdroot)
+                info.close()
+                os.remove(ditar.name)
+            with open(self.kernel_path, 'w') as kernel:
+                curl = pycurl.Curl()
+                curl.setopt(curl.URL, urls[1])
+                curl.setopt(curl.WRITEDATA, kernel)
+                curl.perform()
+                curl.close()
+            with open(self.ramdisk_path, 'w') as ramdisk:
+                curl = pycurl.Curl()
+                curl.setopt(curl.URL, urls[2])
+                curl.setopt(curl.WRITEDATA, ramdisk)
+                curl.perform()
+                curl.close()
+        except pycurl.error:
+            logging.error("Failed to fetch the debian-installer helper files! " +
+                          "Cannot continue!")
+            sys.exit(1)
+
     def start_ops(self):  # pylint: disable=too-many-statements
         """
         This function creates the live image using the settings determined by
@@ -169,7 +168,7 @@ class LiveWrapper(cliapp.Application):
         logging.info("Creating work directory...")
 
         # Create work directory
-        self.cdroot = tempfile.mkdtemp()
+        self.cdroot = tempfile.mkdtemp()  # all other directories are based off this
 
         logging.debug("Setting environment variables for customise hook...")
 
@@ -184,16 +183,18 @@ class LiveWrapper(cliapp.Application):
 
         # Run vmdebootstrap, putting files in /live/
         vm = VMDebootstrap(self.settings['distribution'],
+                           self.settings['architecture'],
                            self.settings['mirror'], self.cdroot)
         vm.run()
 
         # Fetch D-I helper archive if needed
         if self.settings['grub']:
             print("Fetching Debian Installer helpers")
-            helpers = fetch_di_helpers()
-            self.cdhelp = helpers[0]
-            self.di_kernel = helpers[1]
-            self.di_ramdisk = helpers[2]
+            self.fetch_di_helpers(
+                self.settings['mirror'],
+                self.settings['distribution'],
+                self.settings['architecture'],
+                self.cdroot)
 
         # Download the udebs
         print("Downloading udebs for Debian Installer...")  # FIXME: self.message()
@@ -205,10 +206,10 @@ class LiveWrapper(cliapp.Application):
         os.makedirs(di_root)
         apt_udeb = AptUdebDownloader(destdir=di_root)
         apt_udeb.mirror = self.settings['mirror']
-        apt_udeb.architecture = 'amd64'  # FIXME: self.settings
+        apt_udeb.architecture = self.settings['architecture']
         apt_udeb.suite = self.settings['distribution']
-        print("Updating cache...")  # FIXME: self.message()
-        logging.debug("Updating cache...")
+        print("Updating a local cache for %s %s ..." % (apt_udeb.architecture, apt_udeb.suite))  # FIXME: self.message()
+        logging.debug("Updating local cache...")
         apt_udeb.prepare_apt()
         # FIXME: add support for a custom apt source on top.
 
@@ -221,18 +222,21 @@ class LiveWrapper(cliapp.Application):
         # Install isolinux if selected
         if self.settings['isolinux']:
             logging.info("Performing isolinux installation...")
-            install_isolinux(self.cdroot)
-            update_isolinux(self.cdroot, self.di_kernel, self.di_ramdisk)
+            install_isolinux(
+                self.cdroot, self.settings['mirror'],
+                self.settings['distribution'],
+                self.settings['architecture'])
+            update_isolinux(self.cdroot, self.kernel_path, self.ramdisk_path)
 
         # Install GRUB if selected
         if self.settings['grub'] or self.settings['grub-loopback-only']:
             logging.info("Performing GRUB installation...")
-            install_grub(self.cdroot, self.cdhelp)
-            update_grub(self.cdroot, self.di_kernel, self.di_ramdisk)
+            install_grub(self.cdroot)  # FIXME: pass architecture & uefi settings.
+            update_grub(self.cdroot, self.kernel_path, self.ramdisk_path)
 
         # Install .disk information
-        logging.info("Installing the disk metadata (badly)...")
-        install_disk_info()
+        logging.info("Installing the disk metadata ...")
+        install_disk_info(self.cdroot)
 
         # Create ISO image
         logging.info("Creating the ISO image with Xorriso...")
@@ -244,9 +248,9 @@ class LiveWrapper(cliapp.Application):
 
         # Remove the temporary directories
         logging.info("Removing temporary work directories...")
-        if self.cdhelp is not None:
-            rmtree(self.cdhelp)
-        rmtree(self.cdroot)
+        # if self.cdhelp is not None:
+        #    rmtree(self.cdhelp)
+        # rmtree(self.cdroot)
 
 if __name__ == "__main__":
     LiveWrapper(version=__version__).run()

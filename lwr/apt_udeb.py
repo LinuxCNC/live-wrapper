@@ -6,13 +6,17 @@
 
 # depends debian-archive-keyring vmdebootstrap python-apt
 
+# pylint: disable=missing-docstring,line-too-long,superfluous-parens
+
 import os
 import sys
 import shutil
 import tempfile
 import apt
 import apt_pkg
-from vmdebootstrap.base import copy_files
+import cliapp
+from vmdebootstrap.base import copy_files, runcmd
+
 
 # handle a list of package names (udebs)
 # handle a list of excluded package names
@@ -35,7 +39,7 @@ class AptUdebDownloader(object):
 
     def prepare_apt(self):
         if not self.suite or not self.mirror:
-            raise RuntimeError("Misconfiguration: no suite or mirror set")
+            raise cliapp.AppException("Misconfiguration: no suite or mirror set")
         state_dir = tempfile.mkdtemp()
         os.mkdir(os.path.join(state_dir, 'lists'))
         self.dirlist.append(state_dir)
@@ -55,26 +59,59 @@ class AptUdebDownloader(object):
                 self.mirror, self.suite, ' '.join(self.components)))
         self.dirlist.append(etc_dir)
         updates = {
-            'APT::Architecture': self.architecture,
-            'APT::Architectures': self.architecture,
+            'APT::Architecture': str(self.architecture),
+            'APT::Architectures': str(self.architecture),
             'Dir::State': state_dir,
             'Dir::Cache': cache_dir,
             'Dir::Etc': etc_dir,
         }
         for key, value in updates.items():
-            apt_pkg.config[key] = value
+            try:
+                apt_pkg.config[key] = value
+            except TypeError as exc:
+                print(key, value, exc)
+            continue
+
         self.cache = apt.cache.Cache()
         try:
             self.cache.update()
             self.cache.open()
         except apt.cache.FetchFailedException as exc:
-            raise RuntimeError('Unable to update cache: %s' % exc)
+            raise cliapp.AppException('Unable to update cache: %s' % exc)
         if not os.path.exists(self.destdir):
-            raise RuntimeError('Destination directory %s does not exist' % self.destdir)
+            raise cliapp.AppException('Destination directory %s does not exist' % self.destdir)
+
+    def download_package(self, name, destdir):
+        if not self.cache:
+            raise cliapp.AppException('No cache available.')
+        if name not in self.cache:
+            raise cliapp.AppException('%s is not available' % name)
+        pkg = self.cache[name]
+        if not hasattr(pkg, 'versions'):
+            raise cliapp.AppException('%s has no available versions.' % name)
+        if len(pkg.versions) > 1:
+            pkg.version_list.sort(apt_pkg.version_compare)
+            version = pkg.version_list[0]
+            print("Multiple versions returned for %s - using newest: %s" % (name, pkg.version_list[0]))
+        else:
+            version = pkg.versions[0]
+        if not version.uri:
+            raise cliapp.AppException('Not able to download %s' % name)
+        try:
+            version.fetch_binary(destdir=destdir)
+        except TypeError as exc:
+            return None
+        except apt.package.FetchError as exc:
+            raise cliapp.AppException('Unable to fetch %s: %s' % (name, exc))
+        filename = os.path.join(destdir, os.path.basename(version.record['Filename']))
+        if os.path.exists(filename):
+            return filename
+        return None
+
 
     def download_udebs(self, exclude_list):
         if not self.cache:
-            raise RuntimeError('No cache available.')
+            raise cliapp.AppException('No cache available.')
         main_pool = os.path.join(self.destdir, 'pool', 'main')
         os.makedirs(main_pool)
         for pkg_name in self.cache.keys():
@@ -103,7 +140,7 @@ class AptUdebDownloader(object):
             except TypeError as exc:
                 continue
             except apt.package.FetchError as exc:
-                raise RuntimeError('Unable to fetch %s: %s' % (pkg_name, exc))
+                raise cliapp.AppException('Unable to fetch %s: %s' % (pkg_name, exc))
 
     def clean_up_apt(self):
         for clean in self.dirlist:
@@ -112,12 +149,19 @@ class AptUdebDownloader(object):
 
 def main():
     apt_udeb = AptUdebDownloader('/tmp/test/')
-    apt_udeb.mirror = "file:///home/neil/mirror/debian"
+    apt_udeb.mirror = "http://localhost/mirror/debian"
     apt_udeb.architecture = 'amd64'
     apt_udeb.suite = 'stable'
+    apt_udeb.components = ['main']
     apt_udeb.prepare_apt()
-    apt_udeb.download_udebs([])
+    # apt_udeb.download_udebs([])
+    destdir = tempfile.mkdtemp()
+    filename = apt_udeb.download_package('syslinux-common', destdir)
     apt_udeb.clean_up_apt()
+    runcmd(['dpkg', '-x', filename, destdir])
+    ret = os.path.join(destdir, 'usr', 'lib')
+    if os.path.exists(ret):
+        return ret
 
 
 if __name__ == '__main__':

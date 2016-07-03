@@ -19,8 +19,8 @@ Depends: ${misc:Depends},
          ${python:Depends},
          vmdebootstrap,
          xorriso,
-         isolinux
-Depends: ${misc:Depends}, ${python:Depends}, vmdebootstrap
+         isolinux,
+         debian-archive-keyring
 Suggests: cmdtest
 Description: Wrapper for vmdebootstrap for creating live images
  live-wrapper is a wrapper around vmdebootstrap to install a live Debian

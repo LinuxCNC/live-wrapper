@@ -8,11 +8,19 @@
 The lwr.isolinux module contains helpers for isolinux including the
 installation of isolinux files to the cdroot and the generation of the
 isolinux.cfg files.
+Directory listing of /isolinux/
+advanced.cfg boot.cat hdt.c32 install.cfg isolinux.bin isolinux.cfg
+ldlinux.c32 libcom32.c32 libutil.c32 live.cfg menu.cfg splash.png
+stdmenu.cfg vesamenu.c32
 """
 
 import os
 import shutil
+import tempfile
+import cliapp
+from vmdebootstrap.base import runcmd
 from lwr.vm import detect_kernels
+from lwr.apt_udeb import AptUdebDownloader
 
 # pylint: disable=missing-docstring
 
@@ -23,8 +31,12 @@ class ISOLINUXConfig(object):
     vmdebootstrap squashfs output directory.
     """
 
+    def __init__(self, cdroot):
+        self.cdroot = cdroot
+        self.versions = None
+
     def detect(self):
-        self.versions = detect_kernels()
+        self.versions = detect_kernels(self.cdroot)
 
     def generate_cfg(self):
         ret = str()
@@ -48,22 +60,49 @@ class ISOLINUXConfig(object):
         ret += "LABEL Debian Installer\n"
         ret += "  SAY Booting Debian Installer...\" {\n"
         ret += "  KERNEL /d-i/%s\n" % kernel
-        ret += "  APPEND initrd=/d-i/%s-%s\n" % ramdisk
+        ret += "  APPEND initrd=/d-i/%s\n" % ramdisk
         ret += "}\n"
         return ret
 
+def prepare_download(destdir, mirror, suite, architecture):
+    apt_handler = AptUdebDownloader(destdir)
+    apt_handler.mirror = mirror
+    apt_handler.architecture = architecture
+    apt_handler.suite = suite
+    apt_handler.components = ['main']
+    apt_handler.prepare_apt()
+    return apt_handler
 
-def install_isolinux(cdroot):
-    if not os.path.exists("%s/boot" % (cdroot,)):
-        os.mkdir("%s/boot" % (cdroot,))
-    ISOLINUX_DIR = "%s/boot/isolinux" % (cdroot,)
-    os.mkdir(ISOLINUX_DIR)
-    # FIXME: cannot depend on sysvinit-common - could be the wrong arch or suite
-    shutil.copyfile("/usr/lib/syslinux/modules/bios/ldlinux.c32",
-                    "%s/ldlinux.c32" % (ISOLINUX_DIR,))
-    shutil.copyfile("/usr/lib/ISOLINUX/isolinux.bin",
-                    "%s/isolinux.bin" % (ISOLINUX_DIR,))
-    config = ISOLINUXConfig()
+
+def install_isolinux(cdroot, mirror, suite, architecture):
+    """
+    Download and unpack the correct syslinux-common
+    and isolinux packages for isolinux support.
+    """
+    if not os.path.exists("%s/isolinux" % (cdroot,)):
+        os.mkdir("%s/isolinux" % (cdroot,))
+    ISOLINUX_DIR = "%s/isolinux" % (cdroot,)
+    destdir = tempfile.mkdtemp()
+    handler = prepare_download(destdir, mirror, suite, architecture)
+    filename = handler.download_package('syslinux-common', destdir)
+    if filename:
+        runcmd(['dpkg', '-x', filename, destdir])
+        shutil.copyfile(
+            os.path.join(destdir, "usr/lib/syslinux/modules/bios/ldlinux.c32"),
+            "%s/ldlinux.c32" % (ISOLINUX_DIR,))
+    else:
+        raise cliapp.AppException('Unable to download syslinux-common')
+    filename = handler.download_package('isolinux', destdir)
+    if filename:
+        runcmd(['dpkg', '-x', filename, destdir])
+        shutil.copyfile(
+            os.path.join(destdir, "usr/lib/ISOLINUX/isolinux.bin"),
+            "%s/isolinux.bin" % (ISOLINUX_DIR,))
+    else:
+        raise cliapp.AppException('Unable to download isolinux')
+    handler.clean_up_apt()
+    shutil.rmtree(destdir)
+    config = ISOLINUXConfig(cdroot)
     config.detect()
     with open("%s/isolinux.cfg" % (ISOLINUX_DIR,), "w") as cfgout:
         cfgout.write(config.generate_cfg())
@@ -71,6 +110,6 @@ def install_isolinux(cdroot):
 
 def update_isolinux(cdroot, kernel, ramdisk):
     isolinux_dir = "%s/boot/isolinux" % (cdroot,)
-    config = ISOLINUXConfig()
+    config = ISOLINUXConfig(cdroot)
     with open("%s/isolinux.cfg" % (isolinux_dir,), "a") as cfgout:
         cfgout.write(config.generate_di_cfg(kernel, ramdisk))
