@@ -22,6 +22,7 @@ vmlinuz
 
 import os
 from vmdebootstrap.base import runcmd
+from vmdebootstrap.constants import arch_table
 
 # pylint: disable=superfluous-parens,missing-docstring,too-few-public-methods
 
@@ -29,17 +30,17 @@ class VMDebootstrap(object):
 
     def __init__(self, distribution, architecture, mirror=None, cdroot='/tmp/'):
         self.cdroot = cdroot
-        # FIXME: needs to be arch dependent, esp. for --use-uefi/isolinux/grub support.
-        # FIXME: use arch_table from vmdebootstrap.constants
         self.args = ["vmdebootstrap",
                      "--sudo", "--lock-root-password",
                      "--arch", architecture,
                      "--enable-dhcp", "--configure-apt", "--verbose",
                      "--log", "vmdebootstrap.log",
                      "--squash=%s" % os.path.join(self.cdroot, 'live'),
-                     "--log-level", "debug", "--customize", "--use-uefi",
+                     "--log-level", "debug", "--customize",
                      "hooks/customise.sh"]
         self.args.extend(["--distribution", distribution])
+        # if architecture in arch_table:
+        #     self.args.extend(["--use-uefi", "--grub"])
 
         if mirror is not None:
             # specify the local mirror used to build the vm

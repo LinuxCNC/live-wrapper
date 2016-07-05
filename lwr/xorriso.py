@@ -38,13 +38,24 @@ class Xorriso(object):
         self.args.extend(['-outdev', self.image_output])
         self.args.extend(['map', cdroot, '/'])
 
+        # sudo xorriso -outdev jessie-live-uefi.iso map /tmp/tmpqb3AII /
+        # -as mkisofs -b isolinux.bin -c boot.cat -boot-load-size 4
+        # -boot-info-table -no-emul-boot -eltorito-alt-boot
+        # -e grub/efi.img -no-emul-boot -isohybrid-gpt-basdat
+
+
         if self.isolinux:
-            self.args.extend(['-boot_image', 'isolinux', 'dir=/isolinux'])
+            self.args.extend([
+                '-as', 'mkisofs', '-b', 'isolinux/isolinux.bin',
+                '-c', 'isolinux/boot.cat', '-boot-load-size', '4',
+                '-boot-info-table', '-no-emul-boot'
+            ])
 
         if self.grub:
-            self.args.extend(['-as', 'mkisofs', '-eltorito-alt-boot', '-e',
-                              'grub/efi.img', '-no-emul-boot',
-                              '-isohybrid-gpt-basdat'])
+            self.args.extend([
+                '-eltorito-alt-boot', '-e',
+                'boot/grub/efi.img', '-no-emul-boot',
+                '-isohybrid-gpt-basdat'])
         return self.args
 
     def build_image(self):
@@ -61,5 +72,5 @@ class Xorriso(object):
         if len(self.args) == 1:
             cliapp.AppException("Attempted to run xorriso before building "
                                 "arguments!")
-        print(self.args)
+        print(' '.join(self.args))
         runcmd(self.args)

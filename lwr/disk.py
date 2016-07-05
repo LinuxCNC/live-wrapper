@@ -22,9 +22,9 @@ import os
 def install_disk_info(cdroot):
     """
     This function creates the .disk/info metadata and installs it into the
-    cdroot.
+    specified cdroot.
     """
 
     os.makedirs(os.path.join(cdroot, ".disk"))
-    with open(os.path.join(cdroot, ".disk", "info", "w")) as i:
+    with open(os.path.join(cdroot, ".disk", "info"), "w") as i:
         i.write("HELLO")

@@ -112,7 +112,7 @@ class AptUdebDownloader(object):
     def download_udebs(self, exclude_list):
         if not self.cache:
             raise cliapp.AppException('No cache available.')
-        main_pool = os.path.join(self.destdir, 'pool', 'main')
+        main_pool = os.path.join(self.destdir, '..', 'pool', 'main')
         os.makedirs(main_pool)
         for pkg_name in self.cache.keys():
             prefix = pkg_name[0]
@@ -144,7 +144,8 @@ class AptUdebDownloader(object):
 
     def clean_up_apt(self):
         for clean in self.dirlist:
-            shutil.rmtree(clean)
+            if os.path.exists(clean):
+                shutil.rmtree(clean)
 
 
 def main():

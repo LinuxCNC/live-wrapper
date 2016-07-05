@@ -16,7 +16,7 @@ disable_daemons
 # prepare_apt_source 'http://mirror.bytemark.co.uk/debian' 'stable'
 prepare_apt_source 'http://localhost/mirror/debian' 'stable'
 
-chroot ${rootdir} apt-get -y install initramfs-tools live-boot live-config ${LWR_TASK_PACKAGES} ${LWR_EXTRA_PACKAGES} task-laptop task-english
+chroot ${rootdir} apt-get -y install initramfs-tools live-boot live-config ${LWR_TASK_PACKAGES} ${LWR_EXTRA_PACKAGES} task-laptop task-english libnss-myhostname
 
 echo "blacklist bochs-drm" > $rootdir/etc/modprobe.d/qemu-blacklist.conf
 
