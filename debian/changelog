@@ -1,6 +1,9 @@
 live-wrapper (0.4) UNRELEASED; urgency=medium
 
-  * 
+  * debian/control:
+   - Standards version updated to 3.9.8
+   - Vcs-Git and Vcs-Browser changes to use HTTPS URLs
+   - Added dependencies on xorriso and isolinux (Closes: #831367)
 
  -- Iain R. Learmonth <irl@debian.org>  Wed, 25 May 2016 14:01:00 +0100
 
