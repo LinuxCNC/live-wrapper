@@ -1,10 +1,8 @@
 #!/usr/bin/make -f
 
 %:
-	dh $@ --with python2
+	dh $@ --with python2,sphinxdoc
 
 override_dh_auto_build:
 	dh_auto_build
 	( cd doc && make html )
-	rm doc/_build/html/_static/jquery.js
-	rm doc/_build/html/_static/underscore.js
