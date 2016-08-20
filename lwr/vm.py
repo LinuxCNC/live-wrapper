@@ -30,6 +30,10 @@ class VMDebootstrap(object):
 
     def __init__(self, distribution, architecture, mirror=None, cdroot='/tmp/'):
         self.cdroot = cdroot
+        # FIXME: The customise script needs to be specified in the command line
+        # arguments, falling back to /usr/share/vmdebootstrap/hooks/customize.sh
+        # if no script is specified and hooks/customize.sh does not exist in
+        # the current directory.
         self.args = ["vmdebootstrap",
                      "--sudo", "--lock-root-password",
                      "--arch", architecture,
