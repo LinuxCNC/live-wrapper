@@ -106,6 +106,9 @@ class LiveWrapper(cliapp.Application):
             ['grub-loopback-only'], 'Only install the loopback.cfg GRUB '
             'configuration (for loopback support) (overrides --grub) '
             '(default: %default)', default=False, group="Bootloaders")
+        self.settings.boolean(
+            ['installer'], 'Include Debian Installer in the Live image',
+            default=False, group="Debian Installer")
 
     def process_args(self, args):
         if os.path.exists(self.settings['image_output']):
@@ -233,26 +236,27 @@ class LiveWrapper(cliapp.Application):
                 self.settings['architecture'])
 
         # Download the udebs
-        print("Downloading udebs for Debian Installer...")  # FIXME: self.message()
-        logging.info("Downloading udebs for Debian Installer...")
-        # FIXME: get exclude_list from user
-        exclude_list = []
-        # FIXME: may need a change to the download location
-        di_root = os.path.join(self.cdroot, 'd-i')
-        apt_udeb = AptUdebDownloader(destdir=di_root)
-        apt_udeb.mirror = self.settings['mirror']
-        apt_udeb.architecture = self.settings['architecture']
-        apt_udeb.suite = self.settings['distribution']
-        print("Updating a local cache for %s %s ..." % (apt_udeb.architecture, apt_udeb.suite))  # FIXME: self.message()
-        logging.debug("Updating local cache...")
-        apt_udeb.prepare_apt()
-        # FIXME: add support for a custom apt source on top.
-
-        # download all udebs in the suite, except exclude_list
-        apt_udeb.download_udebs(exclude_list)
-        apt_udeb.clean_up_apt()
-        print("... completed udeb downloads")
-        logging.info("... completed udeb downloads")
+        if self.settings['installer']:
+            print("Downloading udebs for Debian Installer...")  # FIXME: self.message()
+            logging.info("Downloading udebs for Debian Installer...")
+            # FIXME: get exclude_list from user
+            exclude_list = []
+            # FIXME: may need a change to the download location
+            di_root = os.path.join(self.cdroot, 'd-i')
+            apt_udeb = AptUdebDownloader(destdir=di_root)
+            apt_udeb.mirror = self.settings['mirror']
+            apt_udeb.architecture = self.settings['architecture']
+            apt_udeb.suite = self.settings['distribution']
+            print("Updating a local cache for %s %s ..." % (apt_udeb.architecture, apt_udeb.suite))  # FIXME: self.message()
+            logging.debug("Updating local cache...")
+            apt_udeb.prepare_apt()
+            # FIXME: add support for a custom apt source on top.
+    
+            # download all udebs in the suite, except exclude_list
+            apt_udeb.download_udebs(exclude_list)
+            apt_udeb.clean_up_apt()
+            print("... completed udeb downloads")
+            logging.info("... completed udeb downloads")
 
         # Install isolinux if selected
         if self.settings['isolinux']:
@@ -264,13 +268,15 @@ class LiveWrapper(cliapp.Application):
                 bootdir, self.settings['mirror'],
                 self.settings['distribution'],
                 self.settings['architecture'])
-            update_isolinux(bootdir, self.kernel_path, self.ramdisk_path)
+            if self.settings['installer']:
+                update_isolinux(bootdir, self.kernel_path, self.ramdisk_path)
 
         # Install GRUB if selected
         if self.settings['grub'] or self.settings['grub-loopback-only']:
             logging.info("Performing GRUB installation...")
-            install_grub(self.cdroot)  # FIXME: pass architecture & uefi settings.
-            update_grub(self.cdroot, self.kernel_path, self.ramdisk_path)
+            install_grub(self.cdroot) # FIXME: pass architecture & uefi settings.
+            if self.settings['installer']:
+                update_grub(self.cdroot, self.kernel_path, self.ramdisk_path)
 
         # Install .disk information
         logging.info("Installing the disk metadata ...")
@@ -286,7 +292,8 @@ class LiveWrapper(cliapp.Application):
 
         # Remove the temporary directories
         logging.info("Removing temporary work directories...")
-        apt_udeb.clean_up_apt()
+        if self.settings['installer']:
+            apt_udeb.clean_up_apt()
         # rmtree(self.cdroot)
         print("Use the -cdrom option to test the image using qemu-system.")
 
