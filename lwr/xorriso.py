@@ -45,17 +45,16 @@ class Xorriso(object):
 
 
         if self.isolinux:
-            self.args.extend([
-                '-as', 'mkisofs', '-b', 'isolinux/isolinux.bin',
-                '-c', 'isolinux/boot.cat', '-boot-load-size', '4',
-                '-boot-info-table', '-no-emul-boot'
-            ])
+            self.args.extend(['-boot_image', 'isolinux', 'dir=/isolinux',
+                              '-boot_image', 'isolinux',
+                              'system_area=/usr/lib/ISOLINUX/isohdpfx.bin'])
 
         if self.grub:
-            self.args.extend([
-                '-eltorito-alt-boot', '-e',
-                'boot/grub/efi.img', '-no-emul-boot',
-                '-isohybrid-gpt-basdat'])
+            self.args.extend(['-boot_image', 'any', 'next',
+                              '-boot_image', 'any', 'efi_path=boot/grub/efi.img',
+                              '-boot_image', 'isolinux',
+                              'partition_entry=gpt_basdat'])
+
         return self.args
 
     def build_image(self):
