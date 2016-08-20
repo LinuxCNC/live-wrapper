@@ -13,8 +13,7 @@ mount_support
 disable_daemons
 # FIXME: pass the specified build mirror.
 # MUST be available over http, file:// will not work inside the VM chroot
-# prepare_apt_source 'http://mirror.bytemark.co.uk/debian' 'stable'
-prepare_apt_source 'http://localhost/mirror/debian' 'stable'
+prepare_apt_source 'http://ftp.debian.org/debian/' 'stretch'
 
 chroot ${rootdir} apt-get -y install initramfs-tools live-boot live-config ${LWR_TASK_PACKAGES} ${LWR_EXTRA_PACKAGES} task-laptop task-english libnss-myhostname
 

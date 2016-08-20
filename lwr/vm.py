@@ -47,7 +47,7 @@ class VMDebootstrap(object):
             self.args.extend(["--mirror", mirror])
             # FIXME: apt-mirror is for what the booted image will use
             # this needs to be accessible over http://, not just file://
-            self.args.extend(["--apt-mirror", 'http://localhost/mirror/debian'])
+            self.args.extend(["--apt-mirror", 'http://ftp.debian.org/debian/'])
 
     def run(self):
         print(' '.join(self.args))
