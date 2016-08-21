@@ -80,14 +80,15 @@ class LiveWrapper(cliapp.Application):
         self.settings.string(
             ['d', 'distribution'], 'Debian release to use (default: %default)',
             metavar='NAME',
-            default='stable', group='Base Settings')
+            default='stretch', group='Base Settings')
         self.settings.string(
             ['architecture'], 'architecture to use (%default)',
             metavar='ARCH', default=default_arch)
         self.settings.string(
-            ['m', 'mirror'], 'Mirror to use for image creation',
+            ['m', 'mirror'], 'Mirror to use for image creation (default: %default)',
             metavar='MIRROR',
-            group='Base Settings')
+            group='Base Settings',
+            default='http://ftp.debian.org/debian/')
         self.settings.string(
             ['t', 'tasks'], 'Task packages to install',
             metavar='"task-TASK1 task-TASK2 ..."',
@@ -213,10 +214,10 @@ class LiveWrapper(cliapp.Application):
         logging.debug("Setting environment variables for customise hook...")
 
         # Make options available to customise hook in vmdebootstrap
+        os.environ['LWR_MIRROR'] = self.settings['mirror']
+        os.environ['LWR_DISTRIBUTION'] = self.settings['distribution']
         os.environ['LWR_TASK_PACKAGES'] = self.settings['tasks']
         os.environ['LWR_EXTRA_PACKAGES'] = self.settings['extra']
-        if self.settings['mirror'] == "":
-            os.environ['MIRROR'] = self.settings['mirror']
 
         logging.info("Running vmdebootstrap...")
         print("Running vmdebootstrap...")

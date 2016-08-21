@@ -22,7 +22,6 @@ vmlinuz
 
 import os
 from vmdebootstrap.base import runcmd
-from vmdebootstrap.constants import arch_table
 
 # pylint: disable=superfluous-parens,missing-docstring,too-few-public-methods
 
@@ -43,15 +42,12 @@ class VMDebootstrap(object):
                      "--log-level", "debug", "--customize",
                      "hooks/customise.sh"]
         self.args.extend(["--distribution", distribution])
-        # if architecture in arch_table:
-        #     self.args.extend(["--use-uefi", "--grub"])
+        self.args.extend(["--mirror", mirror])
 
-        if mirror is not None:
-            # specify the local mirror used to build the vm
-            self.args.extend(["--mirror", mirror])
-            # FIXME: apt-mirror is for what the booted image will use
-            # this needs to be accessible over http://, not just file://
-            self.args.extend(["--apt-mirror", 'http://ftp.debian.org/debian/'])
+        # FIXME: apt-mirror is for what the booted image will use
+        # this needs to be accessible over http://, not just file://
+        # FIXME: this should be declared in the command line args for lwr
+        self.args.extend(["--apt-mirror", 'http://ftp.debian.org/debian/'])
 
     def run(self):
         print(' '.join(self.args))

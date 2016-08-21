@@ -11,9 +11,8 @@ trap cleanup 0
 
 mount_support
 disable_daemons
-# FIXME: pass the specified build mirror.
-# MUST be available over http, file:// will not work inside the VM chroot
-prepare_apt_source 'http://ftp.debian.org/debian/' 'stretch'
+
+prepare_apt_source "${LWR_MIRROR}" "${LWR_DISTRIBUTION}"
 
 chroot ${rootdir} apt-get -y install initramfs-tools live-boot live-config ${LWR_TASK_PACKAGES} ${LWR_EXTRA_PACKAGES} task-laptop task-english libnss-myhostname
 
