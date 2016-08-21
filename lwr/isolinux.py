@@ -46,17 +46,20 @@ class ISOLINUXConfig(object):
         ret = str()
         self.versions.sort(reverse=True)
         first = True
-        ret += "DEFAULT live\n"
-        ret += "  menu default\n"
+        #ret += "DEFAULT live\n"
+        #ret += "  menu default\n"
+        ret += "UI vesamenu.c32\n"
         for version in self.versions:
+            label = "Debian Live (%s)\n" % (version,)
             if first:
-                ret += "LABEL Debian Live\n"
-            else:
-                ret += "LABEL Live-%s\n" % (version,)
-            ret += "  SAY Booting Debian GNU/Linux Live (kernel %s)...\" {\n" % (version,)
+                ret += "DEFAULT %s\n" % (label,)
+            ret += "LABEL %s\n" % (label,)
+            if first:
+                ret += "  MENU DEFAULT\n"
+            ret += "  SAY Booting Debian GNU/Linux Live (kernel %s)...\" \n" % (version,)
             ret += "  KERNEL /live/vmlinuz-%s\n" % (version,)
             ret += "  APPEND initrd=/live/initrd.img-%s boot=live components\n" % (version,)
-            ret += "}\n"
+            ret += "\n"
             first = False
         return ret
 
@@ -126,7 +129,7 @@ def install_isolinux(cdroot, mirror, suite, architecture):
     shutil.rmtree(destdir)
     config = ISOLINUXConfig(cdroot)
     config.detect()
-    with open("%s/menu.cfg" % cdroot, "w") as cfgout:
+    with open("%s/isolinux.cfg" % cdroot, "w") as cfgout:
         cfgout.write(config.generate_cfg())
 
 
