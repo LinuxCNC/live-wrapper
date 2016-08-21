@@ -154,7 +154,5 @@ def update_isolinux(cdroot, kernel, ramdisk):
     isolinux = os.path.join(cdroot, '..', 'isolinux')
     # move files out of cdroot/boot/ into cdroot/isolinux/
     move_files(bootdir, isolinux)
-    shutil.copyfile(os.path.join(cdroot, "menu.cfg"),
-                    os.path.join(isolinux, "menu.cfg"))
     # need to remove default installgui
     # need to add live.cfg to menu.cfg
