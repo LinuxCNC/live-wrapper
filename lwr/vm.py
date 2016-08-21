@@ -39,15 +39,21 @@ class VMDebootstrap(object):
                      "--enable-dhcp", "--configure-apt", "--verbose",
                      "--log", "vmdebootstrap.log",
                      "--squash=%s" % os.path.join(self.cdroot, 'live'),
-                     "--log-level", "debug", "--customize",
-                     "hooks/customise.sh"]
+                     "--log-level", "debug"]
         self.args.extend(["--distribution", distribution])
         self.args.extend(["--mirror", mirror])
-
         # FIXME: apt-mirror is for what the booted image will use
         # this needs to be accessible over http://, not just file://
         # FIXME: this should be declared in the command line args for lwr
         self.args.extend(["--apt-mirror", 'http://ftp.debian.org/debian/'])
+
+        # FIXME: Logging should happen here
+        if os.path.exists(os.path.join(".", "hooks", "customize.sh")):
+            self.args.extend(["--customize", "hooks/customise.sh"])
+        elif os.path.exists("/usr/share/live-wrapper/customise.sh"):
+            self.args.extend(["--customize", "/usr/share/live-wrapper/customise.sh"])
+        else:
+            raise cliapp.AppException("Could not locate customise.sh")
 
     def run(self):
         print(' '.join(self.args))
