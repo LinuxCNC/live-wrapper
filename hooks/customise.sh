@@ -12,6 +12,9 @@ trap cleanup 0
 mount_support
 disable_daemons
 
+mv ${rootdir}/etc/resolv.conf ${rootdir}/etc/resolv.conf.bak
+cat /etc/resolv.conf > ${rootdir}/etc/resolv.conf
+
 prepare_apt_source "${LWR_MIRROR}" "${LWR_DISTRIBUTION}"
 
 chroot ${rootdir} apt-get -y install initramfs-tools live-boot live-config ${LWR_TASK_PACKAGES} ${LWR_EXTRA_PACKAGES} task-laptop task-english libnss-myhostname
@@ -19,4 +22,6 @@ chroot ${rootdir} apt-get -y install initramfs-tools live-boot live-config ${LWR
 echo "blacklist bochs-drm" > $rootdir/etc/modprobe.d/qemu-blacklist.conf
 
 replace_apt_source
+
+mv ${rootdir}/etc/resolv.conf ${rootdir}/etc/resolv.conf.bak
 

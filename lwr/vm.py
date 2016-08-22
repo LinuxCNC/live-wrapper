@@ -48,7 +48,7 @@ class VMDebootstrap(object):
         self.args.extend(["--apt-mirror", 'http://ftp.debian.org/debian/'])
 
         # FIXME: Logging should happen here
-        if os.path.exists(os.path.join(".", "hooks", "customize.sh")):
+        if os.path.exists(os.path.join(".", "hooks", "customise.sh")):
             self.args.extend(["--customize", "hooks/customise.sh"])
         elif os.path.exists("/usr/share/live-wrapper/customise.sh"):
             self.args.extend(["--customize", "/usr/share/live-wrapper/customise.sh"])
