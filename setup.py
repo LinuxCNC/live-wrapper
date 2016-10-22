@@ -35,7 +35,7 @@ setup(
         'cliapp >= 1.20150829',
         'vmdebootstrap',
         'requests',
-        'apt'
+        'python-apt'
     ],
     scripts=['bin/lwr']
 )
