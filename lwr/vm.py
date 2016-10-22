@@ -49,7 +49,7 @@ class VMDebootstrap(object):
 
         # FIXME: Logging should happen here
         if os.path.exists(os.path.join(".", "hooks", "customise.sh")):
-            self.args.extend(["--customise", "hooks/customise.sh"])
+            self.args.extend(["--customize", "hooks/customise.sh"])
         elif os.path.exists("/usr/share/live-wrapper/customise.sh"):
             self.args.extend(["--customise", "/usr/share/live-wrapper/customise.sh"])
         else:
