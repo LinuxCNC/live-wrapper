@@ -17,7 +17,6 @@ Package: live-wrapper
 Architecture: all
 Depends: ${misc:Depends},
          ${python:Depends},
-         vmdebootstrap,
          xorriso,
          isolinux,
          debian-archive-keyring
