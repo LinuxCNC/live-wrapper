@@ -34,9 +34,9 @@ By default, the ISO image will be built using the ``stable`` distribution. If
 you'd like to build using ``testing`` or ``unstable`` you can pass the ``-d``
 parameter to live-wrapper like so:
 
-..code ::
+.. code-block:: shell
 
-  $ sudo lwr -d testing
+  sudo lwr -d testing
 
 Using an Alternative Mirror
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -46,9 +46,9 @@ By default, ``vmdebootstrap`` will use the mirror configured in your
 to change the mirror you're using to create the image. You can do this with the
 ``-m`` parameter:
 
-.. code::
+.. code-block:: shell
 
-  $ sudo lwr -m http://localhost/debian/
+  sudo lwr -m http://localhost/debian/
 
 Customising Packages
 ~~~~~~~~~~~~~~~~~~~~

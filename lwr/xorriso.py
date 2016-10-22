@@ -8,9 +8,8 @@
 The lwr.xorriso module provides helpers for calling xorriso as part of the
 image creation process.
 
-.. note::
-    This module requires that the vmdebootstrap modules be available in the
-    Python path.
+.. note:: This module requires that the vmdebootstrap modules be available in
+          the Python path.
 """
 
 import cliapp
