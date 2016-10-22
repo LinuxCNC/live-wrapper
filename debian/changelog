@@ -1,10 +1,13 @@
 live-wrapper (0.4) UNRELEASED; urgency=medium
 
   [ Iain R. Learmonth ]
+  * Fixed discovery of the customization script (Closes: #831637)
+  * Now uses native xorriso options, not mkisofs compatibility (Closes: #831368)
   * debian/control:
    - Standards version updated to 3.9.8
    - Vcs-Git and Vcs-Browser changes to use HTTPS URLs
    - Added dependencies on xorriso and isolinux (Closes: #831367)
+   - vmdebootstrap dependency now handled by dh_python
 
   [ Neil Williams ]
   * Added cmdtest and yarns support
