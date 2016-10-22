@@ -1,4 +1,4 @@
-live-wrapper (0.4) UNRELEASED; urgency=medium
+live-wrapper (0.4) unstable; urgency=medium
 
   [ Iain R. Learmonth ]
   * Fixed discovery of the customization script (Closes: #831637)
@@ -15,7 +15,7 @@ live-wrapper (0.4) UNRELEASED; urgency=medium
   * Fixes to image build process
   * Fixed isolinux paths and grub module loading
 
- -- Iain R. Learmonth <irl@debian.org>  Wed, 25 May 2016 14:01:00 +0100
+ -- Iain R. Learmonth <irl@debian.org>  Sat, 22 Oct 2016 22:48:08 +0100
 
 live-wrapper (0.3) unstable; urgency=medium
 
