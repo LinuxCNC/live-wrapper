@@ -7,10 +7,16 @@
 # setup.py - setuptools script
 
 from setuptools import setup, find_packages
+from os import path
+
+here = path.abspath(path.dirname(__file__))
+
+with open(path.join(here, 'VERSION')) as version_file:
+    version = version_file.read().strip()
 
 setup(
     name='live-wrapper',
-    version='0.4',
+    version=version,
     description='Create a Debian live image based on vmdebootstrap',
     author='Iain R. Learmonth',
     author_email='irl@debian.org',
