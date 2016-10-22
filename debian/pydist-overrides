@@ -1,1 +1,2 @@
 apt python-apt
+vmdebootstrap vmdebootstrap
