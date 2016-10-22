@@ -51,7 +51,7 @@ class VMDebootstrap(object):
         if os.path.exists(os.path.join(".", "hooks", "customise.sh")):
             self.args.extend(["--customize", "hooks/customise.sh"])
         elif os.path.exists("/usr/share/live-wrapper/customise.sh"):
-            self.args.extend(["--customise", "/usr/share/live-wrapper/customise.sh"])
+            self.args.extend(["--customize", "/usr/share/live-wrapper/customise.sh"])
         else:
             raise cliapp.AppException("Could not locate customise.sh")
 
