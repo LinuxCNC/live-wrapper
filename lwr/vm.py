@@ -30,8 +30,8 @@ class VMDebootstrap(object):
     def __init__(self, distribution, architecture, mirror=None, cdroot='/tmp/'):
         self.cdroot = cdroot
         # FIXME: The customise script needs to be specified in the command line
-        # arguments, falling back to /usr/share/vmdebootstrap/hooks/customize.sh
-        # if no script is specified and hooks/customize.sh does not exist in
+        # arguments, falling back to /usr/share/vmdebootstrap/hooks/customise.sh
+        # if no script is specified and hooks/customise.sh does not exist in
         # the current directory.
         self.args = ["vmdebootstrap",
                      "--sudo", "--lock-root-password",
@@ -49,9 +49,9 @@ class VMDebootstrap(object):
 
         # FIXME: Logging should happen here
         if os.path.exists(os.path.join(".", "hooks", "customise.sh")):
-            self.args.extend(["--customize", "hooks/customise.sh"])
+            self.args.extend(["--customise", "hooks/customise.sh"])
         elif os.path.exists("/usr/share/live-wrapper/customise.sh"):
-            self.args.extend(["--customize", "/usr/share/live-wrapper/customise.sh"])
+            self.args.extend(["--customise", "/usr/share/live-wrapper/customise.sh"])
         else:
             raise cliapp.AppException("Could not locate customise.sh")
 
