@@ -6,20 +6,20 @@ Super Fast Quickstart
 
 Building images with live-wrapper is quite simple. For the impatient:
 
-.. code::
+.. code-block:: shell
 
-  $ sudo apt install live-wrapper
-  $ sudo lwr
+ sudo apt install live-wrapper
+ sudo lwr
 
 This will build you a file named ``output.iso`` in the current directory
 containing a minimal live-image.
 
 .. warning::
 
-  Currently live-wrapper will create a lot of files and directories in the
-  current working directory. There is a TODO item to move these to a temporary
-  location and clean up afterwards, though this has not yet been fully
-  implemented. You may want to use an empty directory to run ``lwr`` in.
+ Currently live-wrapper will create a lot of files and directories in the
+ current working directory. There is a TODO item to move these to a temporary
+ location and clean up afterwards, though this has not yet been fully
+ implemented. You may want to use an empty directory to run ``lwr`` in.
 
 Customising the Image
 ---------------------
@@ -36,7 +36,7 @@ parameter to live-wrapper like so:
 
 .. code-block:: shell
 
-  sudo lwr -d testing
+ sudo lwr -d testing
 
 Using an Alternative Mirror
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -48,7 +48,7 @@ to change the mirror you're using to create the image. You can do this with the
 
 .. code-block:: shell
 
-  sudo lwr -m http://localhost/debian/
+ sudo lwr -m http://localhost/debian/
 
 Customising Packages
 ~~~~~~~~~~~~~~~~~~~~
@@ -71,9 +71,31 @@ live-wrapper.
 
 For example:
 
-.. code::
+.. code-block:: shell
 
-  $ sudo lwr -e vim -t science-typesetting
+ sudo lwr -e vim -t science-typesetting
+
+Testing the Image with QEMU
+---------------------------
+
+You can easily test your created live images with QEMU.
+
+.. warning:: You will need to increase the amount of memory available to
+             QEMU when running the live image. The image will crash if run
+             with the default memory limit.
+
+To test the image using BIOS boot:
+
+.. code-block:: shell
+
+ qemu-system-x86_64 -m 2G -cdrom live.iso
+
+For EFI boot you will need to install the ``ovmf`` package and then run:
+
+
+.. code-block:: shell
+
+ qemu-system-x86_64 -bios /usr/share/ovmf/OVMF.fd -m 2G -cdrom live.iso 
 
 Next Steps
 ----------
