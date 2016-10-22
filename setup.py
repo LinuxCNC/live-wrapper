@@ -22,6 +22,7 @@ setup(
         'Intended Audience :: System Administrators',
         'License :: OSI Approved :: BSD License',
         'Programming Language :: Python',
+        'Programming Language :: Python :: 2.7',
         'Topic :: System :: Installation/Setup',
     ],
     packages=[
