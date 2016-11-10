@@ -16,7 +16,7 @@ import apt
 import apt_pkg
 import cliapp
 from vmdebootstrap.base import copy_files, runcmd
-
+from subprocess import check_output
 
 # handle a list of package names (udebs)
 # handle a list of excluded package names
@@ -135,6 +135,23 @@ class AptUdebDownloader(object):
                 continue
             os.makedirs(pkg_dir)
             # FIXME: still need a Packages file and Release.
+            # Horribe hardcoded mess --------------------------------------
+            packages = check_output(['apt-ftparchive', 'packages', os.path.join(self.destdir, '..', 'pool', 'main')])
+            os.makedirs(os.path.join(self.destdir, '..', 'dists', 'stretch', 'main', 'debian-installer', 'binary-amd64'))
+            with open(os.path.join(self.destdir, '..', 'dists', 'stretch', 'main', 'debian-installer', 'binary-amd64', 'Packages'), 'w') as pkgout:
+                pkgout.write(packages)
+            release = check_output([
+                    'apt-ftparchive',
+                    '-o', 'APT::FTPArchive::Release::Origin="Debian"',
+                    '-o', 'APT::FTPArchive::Release::Label="Debian"',
+                    '-o', 'APT::FTPArchive::Release::Suite="testing"',
+                    '-o', 'APT::FTPArchive::Release::Codename="stretch"',
+                    '-o', 'APT::FTPArchive::Release::Architectures="amd64"',
+                    '-o', 'APT::FTPArchive::Release::Components="main"',
+	            'release', os.path.join(self.destdir, '..', 'dists', 'stretch')])
+            with open(os.path.join(self.destdir, '..', 'dists', 'stretch', 'Release'), 'w') as relout: 
+                relout.write(release)
+            # End mess ----------------------------------------------------
             try:
                 version.fetch_binary(destdir=pkg_dir)
             except TypeError as exc:
