@@ -70,7 +70,7 @@ class LiveWrapper(cliapp.Application):
     ramdisk_path = None
     gtk_kernel_path = None
     gtk_ramdisk_path = None
-    
+
 
     def add_settings(self):
         default_arch = subprocess.check_output(["dpkg", "--print-architecture"]).decode('utf-8').strip()
@@ -117,7 +117,7 @@ class LiveWrapper(cliapp.Application):
         self.settings.boolean(
             ['hdt'], 'Include HDT in the Live image',
             default=False, group="Debian Installer")
-    
+
     def process_args(self, args):
         if os.path.exists(self.settings['image_output']):
             raise cliapp.AppException("Image '%s' already exists" % self.settings['image_output'])
@@ -129,7 +129,7 @@ class LiveWrapper(cliapp.Application):
             sys.exit("You need to have root privileges to run this script.")
         # FIXME: cleanup on error.
         self.start_ops()
-    
+
     def fetch_di_helpers(self, mirror, suite, architecture):
         logging.info("Downloading helper files from debian-installer team...")
         urls = cdrom_image_url(mirror, suite, architecture, gtk=False)
@@ -214,7 +214,7 @@ class LiveWrapper(cliapp.Application):
                 logging.error("Failed to fetch the gtk debian-installer helper files! " +
                               "Cannot continue!")
                 sys.exit(1)
-        
+
 
     def start_ops(self):  # pylint: disable=too-many-statements
         """
@@ -226,13 +226,10 @@ class LiveWrapper(cliapp.Application):
             have been validated.
         """
 
-        print("Creating work directory...")
-        logging.info("Creating work directory...")
-
         # Create work directory
         self.cdroot = tempfile.mkdtemp()  # all other directories are based off this
-
-        logging.debug("Setting environment variables for customise hook...")
+        logging.debug("Created temporary work directory (cdroot) at %s."
+                      % (self.cdroot,))
 
         # Make options available to customise hook in vmdebootstrap
         os.environ['LWR_MIRROR'] = self.settings['mirror']
@@ -240,22 +237,25 @@ class LiveWrapper(cliapp.Application):
         os.environ['LWR_TASK_PACKAGES'] = self.settings['tasks']
         os.environ['LWR_EXTRA_PACKAGES'] = self.settings['extra']
 
+        for envvar in os.environ.keys():
+            if envvar.startswith('LWR_'):
+                logging.debug("environment: %s = '%s'" % (envvar, os.environ[envvar]))
+
         logging.info("Running vmdebootstrap...")
-        print("Running vmdebootstrap...")
 
         # Run vmdebootstrap, putting files in /live/
         vm = VMDebootstrap(self.settings['distribution'],
                            self.settings['architecture'],
                            self.settings['mirror'], self.cdroot)
         vm.run()
-        
+
         # Initialise menu
         # Fetch D-I helper archive
-        self.fetch_di_helpers(                
+        self.fetch_di_helpers(
             self.settings['mirror'],
             self.settings['distribution'],
             self.settings['architecture'])
- 
+
         isolinuxdir=os.path.join(self.cdroot, 'isolinux')
         os.mkdir(isolinuxdir)
         #if os.path.exists(os.path.join (isolinuxdir, 'isolinux.cfg')) and\
@@ -275,9 +275,9 @@ menu begin advanced
 menu end
 
 menu clear'''
-             
-         
-        
+
+
+
         # Fetch D-I installers if needed???
         if self.settings['installer']:
             print("Fetching Debian Installer")
@@ -302,14 +302,14 @@ menu clear'''
             logging.debug("Updating local cache...")
             apt_udeb.prepare_apt()
             # FIXME: add support for a custom apt source on top.
-    
+
             # download all udebs in the suite, except exclude_list
             apt_udeb.download_udebs(exclude_list)
             # FIXME: generate a Release file
             apt_udeb.clean_up_apt()
             print("... completed udeb downloads")
             logging.info("... completed udeb downloads")
-              
+
         # Install isolinux if selected
         if self.settings['isolinux']:
             logging.info("Performing isolinux installation...")
@@ -322,12 +322,12 @@ menu clear'''
 
             with open ("%s/%s" % (isolinuxdir, 'menu.cfg'), 'w') as config_file:
                 config_file.write(menustr)
-  
+
             add_live_menu(isolinuxdir, 'live.cfg')
             if self.settings['memtest']:
-                add_memtest_menu(isolinuxdir, 'advanced.cfg')  
+                add_memtest_menu(isolinuxdir, 'advanced.cfg')
             if self.settings['hdt']:
-                add_hdt_menu(isolinuxdir, 'advanced.cfg')  
+                add_hdt_menu(isolinuxdir, 'advanced.cfg')
             if self.settings['installer']:
                 add_installer_menu (isolinuxdir, 'installer.cfg', self.kernel_path, self.ramdisk_path)
 

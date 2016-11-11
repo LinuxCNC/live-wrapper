@@ -21,6 +21,8 @@ vmlinuz
 """
 
 import os
+import logging
+
 from vmdebootstrap.base import runcmd
 
 # pylint: disable=superfluous-parens,missing-docstring,too-few-public-methods
@@ -57,9 +59,9 @@ class VMDebootstrap(object):
             raise cliapp.AppException("Could not locate customise.sh")
 
     def run(self):
-        print(' '.join(self.args))
-        runcmd(self.args)  # FIXME: may want to use a method which prints output in realtime
-        print('vmdebootstrap complete')
+        logging.debug("vmdebootstrap command: %s" % (' '.join(self.args),))
+        runcmd(self.args)
+        logging.debug("vmdebootstrap completed, see vmdebootstrap.log for details")
 
 
 def detect_kernels(cdroot):
