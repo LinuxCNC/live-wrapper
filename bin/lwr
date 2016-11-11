@@ -26,7 +26,7 @@ import subprocess
 from shutil import rmtree
 from tarfile import TarFile
 from lwr.vm import VMDebootstrap
-from lwr.isolinux import install_isolinux, update_isolinux
+from lwr.isolinux import install_isolinux, install_memtest, add_live_menu, add_installer_menu, add_memtest_menu, add_hdt_menu
 from lwr.disk import install_disk_info
 from lwr.grub import install_grub, update_grub
 from lwr.xorriso import Xorriso
@@ -70,6 +70,7 @@ class LiveWrapper(cliapp.Application):
     ramdisk_path = None
     gtk_kernel_path = None
     gtk_ramdisk_path = None
+    
 
     def add_settings(self):
         default_arch = subprocess.check_output(["dpkg", "--print-architecture"]).decode('utf-8').strip()
@@ -110,7 +111,13 @@ class LiveWrapper(cliapp.Application):
         self.settings.boolean(
             ['installer'], 'Include Debian Installer in the Live image',
             default=False, group="Debian Installer")
-
+        self.settings.boolean(
+            ['memtest'], 'Include memtest86+ in the Live image',
+            default=False, group="Debian Installer")
+        self.settings.boolean(
+            ['hdt'], 'Include HDT in the Live image',
+            default=False, group="Debian Installer")
+    
     def process_args(self, args):
         if os.path.exists(self.settings['image_output']):
             raise cliapp.AppException("Image '%s' already exists" % self.settings['image_output'])
@@ -122,9 +129,43 @@ class LiveWrapper(cliapp.Application):
             sys.exit("You need to have root privileges to run this script.")
         # FIXME: cleanup on error.
         self.start_ops()
-
+    
     def fetch_di_helpers(self, mirror, suite, architecture):
         logging.info("Downloading helper files from debian-installer team...")
+        urls = cdrom_image_url(mirror, suite, architecture, gtk=False)
+        bootdir = os.path.join(self.cdroot, 'boot')
+        # python3 only
+        if sys.version_info > (3, 0):
+            ditar = tempfile.mkstemp()
+            with ditar[0] as info:
+                curl = pycurl.Curl()
+                curl.setopt(curl.URL, urls[3])
+                curl.setopt(curl.WRITEDATA, info)
+                curl.perform()
+                curl.close()
+            info = TarFile.open(ditar[1], 'r:gz')
+            info.extractall(path=bootdir)
+            info.close()
+            os.remove(ditar[1])
+        # python 2
+        else:
+            ditar = tempfile.NamedTemporaryFile(delete=False)  # pylint: disable=redefined-variable-type
+            curl = pycurl.Curl()
+            curl.setopt(curl.URL, urls[3])
+            curl.setopt(curl.WRITEDATA, ditar)
+            curl.perform()
+            curl.close()
+            ditar.close()
+            info = TarFile.open(ditar.name, 'r:gz')
+            info.extractall(path=bootdir)
+            info.close()
+            os.remove(ditar.name)
+            files= [ 'menu.cfg' ]
+            for f in files:
+                os.remove(os.path.join(bootdir,f))
+
+    def fetch_di_installer(self, mirror, suite, architecture):
+        logging.info("Downloading installer files from debian-installer team...")
         urls = cdrom_image_url(mirror, suite, architecture, gtk=False)
         bootdir = os.path.join(self.cdroot, 'boot')
         try:
@@ -132,32 +173,6 @@ class LiveWrapper(cliapp.Application):
                 os.makedirs(os.path.join(self.cdroot, 'd-i', 'gtk'))
                 self.kernel_path = os.path.join(self.cdroot, 'd-i', KERNEL)
                 self.ramdisk_path = os.path.join(self.cdroot, 'd-i', RAMDISK)
-            # python3 only
-            if sys.version_info > (3, 0):
-                ditar = tempfile.mkstemp()
-                with ditar[0] as info:
-                    curl = pycurl.Curl()
-                    curl.setopt(curl.URL, urls[3])
-                    curl.setopt(curl.WRITEDATA, info)
-                    curl.perform()
-                    curl.close()
-                info = TarFile.open(ditar[1], 'r:gz')
-                info.extractall(path=bootdir)
-                info.close()
-                os.remove(ditar[1])
-            # python 2
-            else:
-                ditar = tempfile.NamedTemporaryFile(delete=False)  # pylint: disable=redefined-variable-type
-                curl = pycurl.Curl()
-                curl.setopt(curl.URL, urls[3])
-                curl.setopt(curl.WRITEDATA, ditar)
-                curl.perform()
-                curl.close()
-                ditar.close()
-                info = TarFile.open(ditar.name, 'r:gz')
-                info.extractall(path=bootdir)
-                info.close()
-                os.remove(ditar.name)
 
             # fetch debian-installer
             if self.settings['installer']:
@@ -199,6 +214,7 @@ class LiveWrapper(cliapp.Application):
                 logging.error("Failed to fetch the gtk debian-installer helper files! " +
                               "Cannot continue!")
                 sys.exit(1)
+        
 
     def start_ops(self):  # pylint: disable=too-many-statements
         """
@@ -232,11 +248,40 @@ class LiveWrapper(cliapp.Application):
                            self.settings['architecture'],
                            self.settings['mirror'], self.cdroot)
         vm.run()
+        
+        # Initialise menu
+        # Fetch D-I helper archive
+        self.fetch_di_helpers(                
+            self.settings['mirror'],
+            self.settings['distribution'],
+            self.settings['architecture'])
+ 
+        isolinuxdir=os.path.join(self.cdroot, 'isolinux')
+        os.mkdir(isolinuxdir)
+        #if os.path.exists(os.path.join (isolinuxdir, 'isolinux.cfg')) and\
+        #os.path.exists(os.path.join(isolinuxdir, 'stdmenu.cfg')) and\
+        #os.path.exists(os.path.join(isolinuxdir, 'splash.png')):
+        menustr='''menu title Boot menu
+include stdmenu.cfg
+include live.cfg
+include installer.cfg
+menu begin advanced
+        menu title Advanced options
+        label mainmenu
+                menu label ^Back..
+                menu exit
+        include stdmenu.cfg
+        include advanced.cfg
+menu end
 
-        # Fetch D-I helper archive if needed
-        if self.settings['grub']:
-            print("Fetching Debian Installer helpers")
-            self.fetch_di_helpers(
+menu clear'''
+             
+         
+        
+        # Fetch D-I installers if needed???
+        if self.settings['installer']:
+            print("Fetching Debian Installer")
+            self.fetch_di_installer(
                 self.settings['mirror'],
                 self.settings['distribution'],
                 self.settings['architecture'])
@@ -264,19 +309,27 @@ class LiveWrapper(cliapp.Application):
             apt_udeb.clean_up_apt()
             print("... completed udeb downloads")
             logging.info("... completed udeb downloads")
-
+              
         # Install isolinux if selected
         if self.settings['isolinux']:
             logging.info("Performing isolinux installation...")
             bootdir = os.path.join(self.cdroot, 'isolinux')
-            os.mkdir(bootdir)
             # FIXME: catch errors and cleanup.
             install_isolinux(
                 bootdir, self.settings['mirror'],
                 self.settings['distribution'],
                 self.settings['architecture'])
+
+            with open ("%s/%s" % (isolinuxdir, 'menu.cfg'), 'w') as config_file:
+                config_file.write(menustr)
+  
+            add_live_menu(isolinuxdir, 'live.cfg')
+            if self.settings['memtest']:
+                add_memtest_menu(isolinuxdir, 'advanced.cfg')  
+            if self.settings['hdt']:
+                add_hdt_menu(isolinuxdir, 'advanced.cfg')  
             if self.settings['installer']:
-                update_isolinux(bootdir, self.kernel_path, self.ramdisk_path)
+                add_installer_menu (isolinuxdir, 'installer.cfg', self.kernel_path, self.ramdisk_path)
 
         # Install GRUB if selected
         if self.settings['grub'] or self.settings['grub-loopback-only']:
@@ -284,6 +337,14 @@ class LiveWrapper(cliapp.Application):
             install_grub(self.cdroot) # FIXME: pass architecture & uefi settings.
             if self.settings['installer']:
                 update_grub(self.cdroot, self.kernel_path, self.ramdisk_path)
+
+        # Install memtest86+
+        if self.settings['memtest']:
+            bootdir = os.path.join(self.cdroot, 'live')
+            logging.info("Performing memtest installation...")
+            install_memtest(bootdir, self.settings['mirror'],
+                self.settings['distribution'],
+                self.settings['architecture'])
 
         # Install .disk information
         logging.info("Installing the disk metadata ...")

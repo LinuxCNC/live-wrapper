@@ -90,6 +90,45 @@ def prepare_download(destdir, mirror, suite, architecture):
     return apt_handler
 
 
+def install_memtest(cdroot, mirror, suite, architecture):
+    """
+    Download and unpack the memtest86+ package.
+    """
+    destdir = tempfile.mkdtemp()
+    handler = prepare_download(destdir, mirror, suite, architecture)
+    filename = handler.download_package('memtest86+', destdir)
+    # these files are put directly into cdroot/live
+    memtest86_file = 'memtest86+.bin'
+    if filename:
+        runcmd(['dpkg', '-x', filename, destdir])
+        shutil.copyfile(
+            os.path.join(destdir, "boot/%s" % memtest86_file),
+            "%s/%s" % (cdroot, memtest86_file))
+    else:
+        handler.clean_up_apt()
+        shutil.rmtree(destdir)
+        raise cliapp.AppException('Unable to download memtest86+')
+    handler.clean_up_apt()
+    shutil.rmtree(destdir)
+
+def add_memtest_menu(cdroot, config_file):
+    memstr='''label memtest
+menu label ^Memory Diagnostic Tool (memtest86+)
+linux ../live/memtest86+.bin
+'''
+    with open("%s/%s" % (cdroot, config_file), "a") as cfgout:
+        cfgout.write(memstr)
+
+
+def add_hdt_menu(cdroot, config_file):
+    hdtstr='''label hdt
+menu label ^Hardware Detection Tool (HDT)
+com32 hdt.c32
+'''
+    with open("%s/%s" % (cdroot, config_file), "a") as cfgout:
+        cfgout.write(hdtstr)
+
+
 def install_isolinux(cdroot, mirror, suite, architecture):
     """
     Download and unpack the correct syslinux-common
@@ -103,7 +142,7 @@ def install_isolinux(cdroot, mirror, suite, architecture):
     # these files are put directly into cdroot/isolinux
     syslinux_files = [
         'ldlinux.c32', 'libcom32.c32', 'vesamenu.c32',
-        'libutil.c32'
+        'libutil.c32', 'libmenu.c32', 'libgpl.c32', 'hdt.c32'
     ]
     if filename:
         runcmd(['dpkg', '-x', filename, destdir])
@@ -127,10 +166,22 @@ def install_isolinux(cdroot, mirror, suite, architecture):
         raise cliapp.AppException('Unable to download isolinux')
     handler.clean_up_apt()
     shutil.rmtree(destdir)
+    bootdir = os.path.join(cdroot, '..', 'boot')
+    isolinux = os.path.join(cdroot, '..', 'isolinux')
+    move_files(bootdir, isolinux)
+
+def add_live_menu(cdroot, cfg_file):
     config = ISOLINUXConfig(cdroot)
     config.detect()
-    with open("%s/isolinux.cfg" % cdroot, "w") as cfgout:
+    with open("%s/%s" % (cdroot, cfg_file), "w") as cfgout:
         cfgout.write(config.generate_cfg())
+
+def add_installer_menu(cdroot, cfg_file, kernel, ramdisk):
+    config = ISOLINUXConfig(cdroot)
+    config.detect()
+    with open("%s/%s" % (cdroot, cfg_file), "w") as cfgout:
+        cfgout.write(config.generate_di_cfg(kernel, ramdisk, gtk=False))
+        cfgout.write(config.generate_di_cfg(kernel, ramdisk, gtk=True))
 
 
 def move_files(src, dest):
@@ -150,12 +201,3 @@ def move_files(src, dest):
                 if lineno > 0:
                     line = line.replace('%install%', 'd-i')
                 sys.stdout.write(line)
-
-def update_isolinux(cdroot, kernel, ramdisk):
-    config = ISOLINUXConfig(cdroot)
-    bootdir = os.path.join(cdroot, '..', 'boot')
-    isolinux = os.path.join(cdroot, '..', 'isolinux')
-    # move files out of cdroot/boot/ into cdroot/isolinux/
-    move_files(bootdir, isolinux)
-    # need to remove default installgui
-    # need to add live.cfg to menu.cfg
