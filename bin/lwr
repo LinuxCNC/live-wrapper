@@ -117,6 +117,22 @@ class LiveWrapper(cliapp.Application):
         self.settings.boolean(
             ['hdt'], 'Include HDT in the Live image',
             default=False, group="Debian Installer")
+        # Logging overrides
+        for s in ['log', 'log-level']:
+            self.settings._canonical_names.remove(s)
+            self.settings._settingses.pop(s)
+        log_group_name = 'Logging'
+        self.settings.string(['log'],
+                    'write log entries to FILE (default is to not write log '
+                    'files at all); use "syslog" to log to system log, '
+                    '"stderr" to log to the standard error output, '
+                    'or "none" to disable logging',
+                    metavar='FILE', group=log_group_name, default='stderr')
+        self.settings.choice(['log-level'],
+                    ['info', 'debug', 'warning', 'error', 'critical', 'fatal'],
+                    'log at LEVEL, one of debug, info, warning, '
+                    'error, critical, fatal (default: %default)',
+                    metavar='LEVEL', group=log_group_name)
 
     def process_args(self, args):
         if os.path.exists(self.settings['image_output']):
@@ -127,6 +143,8 @@ class LiveWrapper(cliapp.Application):
             self.settings['grub'] = False
         if os.geteuid() != 0:
             sys.exit("You need to have root privileges to run this script.")
+        if not self.settings['log']:
+            self.settings['log'] = "stderr"
         # FIXME: cleanup on error.
         self.start_ops()
 
