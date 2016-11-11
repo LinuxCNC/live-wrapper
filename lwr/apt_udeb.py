@@ -9,6 +9,7 @@
 # pylint: disable=missing-docstring,line-too-long,superfluous-parens
 
 import os
+import re
 import sys
 import shutil
 import tempfile
@@ -134,30 +135,50 @@ class AptUdebDownloader(object):
             if not version.uri:
                 continue
             os.makedirs(pkg_dir)
-            # FIXME: still need a Packages file and Release.
-            # Horribe hardcoded mess --------------------------------------
-            packages = check_output(['apt-ftparchive', 'packages', os.path.join(self.destdir, '..', 'pool', 'main')])
-            os.makedirs(os.path.join(self.destdir, '..', 'dists', 'stretch', 'main', 'debian-installer', 'binary-amd64'))
-            with open(os.path.join(self.destdir, '..', 'dists', 'stretch', 'main', 'debian-installer', 'binary-amd64', 'Packages'), 'w') as pkgout:
-                pkgout.write(packages)
-            release = check_output([
-                    'apt-ftparchive',
-                    '-o', 'APT::FTPArchive::Release::Origin="Debian"',
-                    '-o', 'APT::FTPArchive::Release::Label="Debian"',
-                    '-o', 'APT::FTPArchive::Release::Suite="testing"',
-                    '-o', 'APT::FTPArchive::Release::Codename="stretch"',
-                    '-o', 'APT::FTPArchive::Release::Architectures="amd64"',
-                    '-o', 'APT::FTPArchive::Release::Components="main"',
-	            'release', os.path.join(self.destdir, '..', 'dists', 'stretch')])
-            with open(os.path.join(self.destdir, '..', 'dists', 'stretch', 'Release'), 'w') as relout: 
-                relout.write(release)
-            # End mess ----------------------------------------------------
             try:
                 version.fetch_binary(destdir=pkg_dir)
             except TypeError as exc:
                 continue
             except apt.package.FetchError as exc:
                 raise cliapp.AppException('Unable to fetch %s: %s' % (pkg_name, exc))
+        # FIXME: still need a Packages file and Release.
+        # Horribe hardcoded mess --------------------------------------
+        packages = check_output(['apt-ftparchive', '-o', 'Packages::Extensions=.udeb', 'packages', os.path.join(self.destdir, '..', 'pool', 'main')])
+        print("Generated Packages file for udebs...")
+        meta_dir = os.path.normpath(os.path.join(self.destdir, '..', 'dists', 'stretch', 'main', 'debian-installer', 'binary-amd64'))
+        print("Checking for %s...") % (meta_dir,)
+        if not os.path.exists(meta_dir):
+            print("Creating %s...") % (meta_dir,)
+            os.makedirs(meta_dir)
+        packages = re.sub(r"/tmp.*pool", "pool", packages)
+        with open(os.path.join(meta_dir, 'Packages'), 'w') as pkgout:
+            pkgout.write(packages)
+        print("Written Packages file for udebs...")
+        # More mess, this time for debs
+        packages = check_output(['apt-ftparchive', '-o', 'Packages::Extensions=.deb', 'packages', os.path.join(self.destdir, '..', 'pool', 'main')])
+        print("Generated Packages file for main pool...")
+        meta_dir = os.path.normpath(os.path.join(self.destdir, '..', 'dists', 'stretch', 'main', 'binary-amd64'))
+        print("Checking for %s...") % (meta_dir,)
+        if not os.path.exists(meta_dir):
+            print("Creating %s...") % (meta_dir,)
+            os.makedirs(meta_dir)
+        packages = re.sub(r"/tmp.*pool", "pool", packages)
+        with open(os.path.join(meta_dir, 'Packages'), 'w') as pkgout:
+            pkgout.write(packages)
+        release = check_output([
+                'apt-ftparchive',
+                '-o', 'APT::FTPArchive::Release::Origin=Debian',
+                '-o', 'APT::FTPArchive::Release::Label=Debian',
+                '-o', 'APT::FTPArchive::Release::Suite=testing',
+                '-o', 'APT::FTPArchive::Release::Codename=stretch',
+                '-o', 'APT::FTPArchive::Release::Architectures=amd64',
+                '-o', 'APT::FTPArchive::Release::Components=main',
+	        'release', os.path.abspath(os.path.join(self.destdir, '..', 'dists', 'stretch'))])
+        print("Generated Release file...")
+        with open(os.path.join(self.destdir, '..', 'dists', 'stretch', 'Release'), 'w') as relout: 
+            relout.write(release)
+        print("Wrote Release file...")
+        # End mess ----------------------------------------------------
 
     def clean_up_apt(self):
         for clean in self.dirlist:
