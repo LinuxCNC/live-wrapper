@@ -27,4 +27,8 @@ def install_disk_info(cdroot):
 
     os.makedirs(os.path.join(cdroot, ".disk"))
     with open(os.path.join(cdroot, ".disk", "info"), "w") as i:
-        i.write("HELLO")
+        i.write("Debian GNU/Linux 9 \"stretch\" - Official Snapshot amd64 LIVE/INSTALL Binary 20161111-14:33")
+    with open(os.path.join(cdroot, ".disk", "udeb_include"), "w") as i:
+        i.write("netcfg\nethdetect\npcmciautils-udeb\nlive-installer\n")
+    with open(os.path.join(cdroot, ".disk", "cd_type"), "w") as i:
+        i.write("live")
