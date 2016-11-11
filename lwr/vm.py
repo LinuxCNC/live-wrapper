@@ -35,6 +35,7 @@ class VMDebootstrap(object):
         # the current directory.
         self.args = ["vmdebootstrap",
                      "--sudo", "--lock-root-password",
+                     "--no-systemd-networkd",
                      "--arch", architecture,
                      "--enable-dhcp", "--configure-apt", "--verbose",
                      "--log", "vmdebootstrap.log",
