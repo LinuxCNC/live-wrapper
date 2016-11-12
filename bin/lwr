@@ -152,35 +152,17 @@ class LiveWrapper(cliapp.Application):
         logging.info("Downloading helper files from debian-installer team...")
         urls = cdrom_image_url(mirror, suite, architecture, gtk=False)
         bootdir = os.path.join(self.cdroot, 'boot')
-        # python3 only
-        if sys.version_info > (3, 0):
-            ditar = tempfile.mkstemp()
-            with ditar[0] as info:
-                curl = pycurl.Curl()
-                curl.setopt(curl.URL, urls[3])
-                curl.setopt(curl.WRITEDATA, info)
-                curl.perform()
-                curl.close()
-            info = TarFile.open(ditar[1], 'r:gz')
-            info.extractall(path=bootdir)
-            info.close()
-            os.remove(ditar[1])
-        # python 2
-        else:
-            ditar = tempfile.NamedTemporaryFile(delete=False)  # pylint: disable=redefined-variable-type
-            curl = pycurl.Curl()
-            curl.setopt(curl.URL, urls[3])
-            curl.setopt(curl.WRITEDATA, ditar)
-            curl.perform()
-            curl.close()
-            ditar.close()
-            info = TarFile.open(ditar.name, 'r:gz')
-            info.extractall(path=bootdir)
-            info.close()
-            os.remove(ditar.name)
-            files= [ 'menu.cfg' ]
-            for f in files:
-                os.remove(os.path.join(bootdir,f))
+        ditar = tempfile.NamedTemporaryFile(delete=False)  # pylint: disable=redefined-variable-type
+        curl = pycurl.Curl()
+        curl.setopt(curl.URL, urls[3])
+        curl.setopt(curl.WRITEDATA, ditar)
+        curl.perform()
+        curl.close()
+        ditar.close()
+        info = TarFile.open(ditar.name, 'r:gz')
+        info.extractall(path=bootdir)
+        info.close()
+        os.remove(ditar.name)
 
     def fetch_di_installer(self, mirror, suite, architecture):
         logging.info("Downloading installer files from debian-installer team...")

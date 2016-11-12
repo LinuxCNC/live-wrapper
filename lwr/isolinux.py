@@ -166,9 +166,6 @@ def install_isolinux(cdroot, mirror, suite, architecture):
         raise cliapp.AppException('Unable to download isolinux')
     handler.clean_up_apt()
     shutil.rmtree(destdir)
-    bootdir = os.path.join(cdroot, '..', 'boot')
-    isolinux = os.path.join(cdroot, '..', 'isolinux')
-    move_files(bootdir, isolinux)
 
 def add_live_menu(cdroot, cfg_file):
     config = ISOLINUXConfig(cdroot)
@@ -182,22 +179,3 @@ def add_installer_menu(cdroot, cfg_file, kernel, ramdisk):
     with open("%s/%s" % (cdroot, cfg_file), "w") as cfgout:
         cfgout.write(config.generate_di_cfg(kernel, ramdisk, gtk=False))
         cfgout.write(config.generate_di_cfg(kernel, ramdisk, gtk=True))
-
-
-def move_files(src, dest):
-    for filename in os.listdir(src):
-        src_path = os.path.join(src, filename)
-        if os.path.isdir(src_path) or os.path.islink(src_path):
-            continue
-        shutil.copyfile(
-            src_path,
-            os.path.join(dest, filename))
-        os.unlink(src_path)
-        cfg_file = os.path.join(dest, filename)
-        if cfg_file.endswith('.cfg'):
-            for line in fileinput.input(cfg_file, inplace=1):
-                lineno = 0
-                lineno = string.find(line, '%install%')
-                if lineno > 0:
-                    line = line.replace('%install%', 'd-i')
-                sys.stdout.write(line)
