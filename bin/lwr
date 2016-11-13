@@ -148,6 +148,17 @@ class LiveWrapper(cliapp.Application):
         # FIXME: cleanup on error.
         self.start_ops()
 
+    def download_file(self, url, filehandle):
+        try:
+            curl = pycurl.Curl()
+            curl.setopt(curl.URL, url)
+            curl.setopt(curl.WRITEDATA, filehandle)
+            curl.perform()
+            curl.close()
+        except pycurl.error:
+            logging.critical("Failed to fetch %s. Cannot continue!" % (url,))
+            sys.exit(1)
+
     def fetch_di_helpers(self, mirror, suite, architecture):
         logging.info("Downloading helper files from debian-installer team...")
         urls = cdrom_image_url(mirror, suite, architecture, gtk=False)
@@ -155,11 +166,7 @@ class LiveWrapper(cliapp.Application):
         os.mkdir(bootdir)
         isolinuxdir = os.path.join(self.cdroot, 'isolinux')
         ditar = tempfile.NamedTemporaryFile(delete=False)  # pylint: disable=redefined-variable-type
-        curl = pycurl.Curl()
-        curl.setopt(curl.URL, urls[3])
-        curl.setopt(curl.WRITEDATA, ditar)
-        curl.perform()
-        curl.close()
+        self.download_file(urls[3], ditar)
         ditar.close()
         info = TarFile.open(ditar.name, 'r:gz')
         if self.settings['isolinux']:
@@ -175,55 +182,28 @@ class LiveWrapper(cliapp.Application):
 
     def fetch_di_installer(self, mirror, suite, architecture):
         logging.info("Downloading installer files from debian-installer team...")
-        urls = cdrom_image_url(mirror, suite, architecture, gtk=False)
         bootdir = os.path.join(self.cdroot, 'boot')
-        try:
-            if self.settings['installer']:
-                os.makedirs(os.path.join(self.cdroot, 'd-i', 'gtk'))
-                self.kernel_path = os.path.join(self.cdroot, 'd-i', KERNEL)
-                self.ramdisk_path = os.path.join(self.cdroot, 'd-i', RAMDISK)
-
-            # fetch debian-installer
-            if self.settings['installer']:
-                with open(self.kernel_path, 'w') as kernel:
-                    curl = pycurl.Curl()
-                    curl.setopt(curl.URL, urls[1])
-                    curl.setopt(curl.WRITEDATA, kernel)
-                    curl.perform()
-                    curl.close()
-                with open(self.ramdisk_path, 'w') as ramdisk:
-                    curl = pycurl.Curl()
-                    curl.setopt(curl.URL, urls[2])
-                    curl.setopt(curl.WRITEDATA, ramdisk)
-                    curl.perform()
-                    curl.close()
-        except pycurl.error:
-            logging.error("Failed to fetch the debian-installer helper files! " +
-                          "Cannot continue!")
-            sys.exit(1)
-        # Now get the graphical installer.
         if self.settings['installer']:
+            os.makedirs(os.path.join(self.cdroot, 'd-i', 'gtk'))
+            self.kernel_path = os.path.join(self.cdroot, 'd-i', KERNEL)
+            self.ramdisk_path = os.path.join(self.cdroot, 'd-i', RAMDISK)
+
+        if self.settings['installer']:
+            # fetch debian-installer
+            urls = cdrom_image_url(mirror, suite, architecture, gtk=False)
+            with open(self.kernel_path, 'w') as kernel:
+                self.download_file(urls[1], kernel)
+            with open(self.ramdisk_path, 'w') as ramdisk:
+                self.download_file(urls[2], ramdisk)
+
+            # Now get the graphical installer.
             urls = cdrom_image_url(mirror, suite, architecture, gtk=True)
             self.gtk_kernel_path = os.path.join(self.cdroot, 'd-i', 'gtk', KERNEL)
             self.gtk_ramdisk_path = os.path.join(self.cdroot, 'd-i', 'gtk', RAMDISK)
-            try:
-                with open(self.gtk_kernel_path, 'w') as kernel:
-                    curl = pycurl.Curl()
-                    curl.setopt(curl.URL, urls[1])
-                    curl.setopt(curl.WRITEDATA, kernel)
-                    curl.perform()
-                    curl.close()
-                with open(self.gtk_ramdisk_path, 'w') as ramdisk:
-                    curl = pycurl.Curl()
-                    curl.setopt(curl.URL, urls[2])
-                    curl.setopt(curl.WRITEDATA, ramdisk)
-                    curl.perform()
-                    curl.close()
-            except pycurl.error:
-                logging.error("Failed to fetch the gtk debian-installer helper files! " +
-                              "Cannot continue!")
-                sys.exit(1)
-
+            with open(self.gtk_kernel_path, 'w') as kernel:
+                self.download_file(urls[1], kernel)
+            with open(self.gtk_ramdisk_path, 'w') as ramdisk:
+                self.download_file(urls[2], ramdisk)
 
     def start_ops(self):  # pylint: disable=too-many-statements
         """
