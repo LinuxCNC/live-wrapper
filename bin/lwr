@@ -230,13 +230,17 @@ class LiveWrapper(cliapp.Application):
             if envvar.startswith('LWR_'):
                 logging.debug("environment: %s = '%s'" % (envvar, os.environ[envvar]))
 
-        logging.info("Running vmdebootstrap...")
-
         # Run vmdebootstrap, putting files in /live/
-        vm = VMDebootstrap(self.settings['distribution'],
-                           self.settings['architecture'],
-                           self.settings['mirror'], self.cdroot)
-        vm.run()
+        if os.environ.get("LWR_DEBUG") and "skipvm" in os.environ.get('LWR_DEBUG'):
+            logging.warning("The debug option to skip running vmdebootstrap was enabled.")
+            logging.info("Creating a dummy live/ directory, but not installing a live system.")
+            os.mkdir(os.path.join(self.cdroot, "live"))
+        else:
+            logging.info("Running vmdebootstrap...")
+            vm = VMDebootstrap(self.settings['distribution'],
+                               self.settings['architecture'],
+                               self.settings['mirror'], self.cdroot)
+            vm.run()
 
         # Initialise menu
         # Fetch D-I helper archive
@@ -312,7 +316,8 @@ menu clear'''
             with open ("%s/%s" % (isolinuxdir, 'menu.cfg'), 'w') as config_file:
                 config_file.write(menustr)
 
-            add_live_menu(isolinuxdir, 'live.cfg')
+            if os.environ.get("LWR_DEBUG") is None or not 'skipvm' in os.environ['LWR_DEBUG']:
+                add_live_menu(isolinuxdir, 'live.cfg')
             if self.settings['memtest']:
                 add_memtest_menu(isolinuxdir, 'advanced.cfg')
             if self.settings['hdt']:
