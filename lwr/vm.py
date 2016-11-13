@@ -23,6 +23,7 @@ vmlinuz
 import os
 import logging
 
+import cliapp
 from vmdebootstrap.base import runcmd
 
 # pylint: disable=superfluous-parens,missing-docstring,too-few-public-methods

@@ -6,8 +6,6 @@
 
 # depends debian-archive-keyring vmdebootstrap python-apt
 
-# pylint: disable=missing-docstring,line-too-long,superfluous-parens
-
 import os
 import re
 import sys
@@ -69,7 +67,7 @@ class AptUdebDownloader(object):
         }
         for key, value in updates.items():
             try:
-                apt_pkg.config[key] = value
+                apt_pkg.config[key] = value # pylint: disable=no-member
             except TypeError as exc:
                 print(key, value, exc)
             continue
@@ -92,7 +90,7 @@ class AptUdebDownloader(object):
         if not hasattr(pkg, 'versions'):
             raise cliapp.AppException('%s has no available versions.' % name)
         if len(pkg.versions) > 1:
-            pkg.version_list.sort(apt_pkg.version_compare)
+            pkg.version_list.sort(apt_pkg.version_compare) # pylint: disable=no-member
             version = pkg.version_list[0]
             print("Multiple versions returned for %s - using newest: %s" % (name, pkg.version_list[0]))
         else:
@@ -128,7 +126,7 @@ class AptUdebDownloader(object):
             if not hasattr(pkg, 'versions'):
                 continue
             if len(pkg.versions) > 1:
-                pkg.version_list.sort(apt_pkg.version_compare)
+                pkg.version_list.sort(apt_pkg.version_compare) # pylint: disable=no-member
                 version = pkg.version_list[0]
                 print("Multiple versions returned for %s - using newest: %s" % (pkg_name, pkg.version_list[0]))
             else:
