@@ -170,12 +170,12 @@ class LiveWrapper(cliapp.Application):
         ditar.close()
         info = TarFile.open(ditar.name, 'r:gz')
         if self.settings['isolinux']:
-            isolinux_filenames = ['isolinux.cfg', 'stdmenu.cfg', 'splash.png']
+            isolinux_filenames = ['./isolinux.cfg', './stdmenu.cfg', './splash.png']
             isolinux_files = [f for f in info if f.name in isolinux_filenames]
             info.extractall(members=isolinux_files, path=isolinuxdir)
         if self.settings['grub']:
             os.mkdir(os.path.join(self.cdroot, 'boot', 'grub'))
-            grub_files = [f for f in info if '/grub/' in f.name]
+            grub_files = [f for f in info if f.name.startswith('./grub/')]
             info.extractall(members=grub_files, path=bootdir)
         info.close()
         os.remove(ditar.name)
@@ -250,10 +250,6 @@ class LiveWrapper(cliapp.Application):
             self.settings['architecture'])
 
         isolinuxdir=os.path.join(self.cdroot, 'isolinux')
-        os.mkdir(isolinuxdir)
-        #if os.path.exists(os.path.join (isolinuxdir, 'isolinux.cfg')) and\
-        #os.path.exists(os.path.join(isolinuxdir, 'stdmenu.cfg')) and\
-        #os.path.exists(os.path.join(isolinuxdir, 'splash.png')):
         menustr='''menu title Boot menu
 include stdmenu.cfg
 include live.cfg
