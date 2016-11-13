@@ -152,6 +152,8 @@ class LiveWrapper(cliapp.Application):
         logging.info("Downloading helper files from debian-installer team...")
         urls = cdrom_image_url(mirror, suite, architecture, gtk=False)
         bootdir = os.path.join(self.cdroot, 'boot')
+        os.mkdir(bootdir)
+        isolinuxdir = os.path.join(self.cdroot, 'isolinux')
         ditar = tempfile.NamedTemporaryFile(delete=False)  # pylint: disable=redefined-variable-type
         curl = pycurl.Curl()
         curl.setopt(curl.URL, urls[3])
@@ -160,7 +162,14 @@ class LiveWrapper(cliapp.Application):
         curl.close()
         ditar.close()
         info = TarFile.open(ditar.name, 'r:gz')
-        info.extractall(path=bootdir)
+        if self.settings['isolinux']:
+            isolinux_filenames = ['isolinux.cfg', 'stdmenu.cfg', 'splash.png']
+            isolinux_files = [f for f in info if f.name in isolinux_filenames]
+            info.extractall(members=isolinux_files, path=isolinuxdir)
+        if self.settings['grub']:
+            os.mkdir(os.path.join(self.cdroot, 'boot', 'grub'))
+            grub_files = [f for f in info if '/grub/' in f.name]
+            info.extractall(members=grub_files, path=bootdir)
         info.close()
         os.remove(ditar.name)
 
@@ -329,7 +338,7 @@ menu clear'''
             if self.settings['hdt']:
                 add_hdt_menu(isolinuxdir, 'advanced.cfg')
             if self.settings['installer']:
-                add_installer_menu (isolinuxdir, 'installer.cfg', self.kernel_path, self.ramdisk_path)
+                add_installer_menu(isolinuxdir, 'installer.cfg', self.kernel_path, self.ramdisk_path)
 
         # Install GRUB if selected
         if self.settings['grub'] or self.settings['grub-loopback-only']:
