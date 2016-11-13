@@ -27,58 +27,27 @@ from lwr.apt_udeb import AptUdebDownloader
 
 # pylint: disable=missing-docstring
 
-
-class ISOLINUXConfig(object):
-    """
-    Helper class that creates an ISOLINUX configuration based on a
-    vmdebootstrap squashfs output directory.
-    """
-
-    def __init__(self, cdroot):
-        self.cdroot = cdroot
-        self.versions = None
-
-    def detect(self):
-        # FIXME: need declarative paths
-        self.versions = detect_kernels(os.path.join(self.cdroot, '..'))
-
-    def generate_cfg(self):
-        ret = str()
-        self.versions.sort(reverse=True)
-        first = True
-        #ret += "DEFAULT live\n"
-        #ret += "  menu default\n"
-        ret += "UI vesamenu.c32\n"
-        for version in self.versions:
-            label = "Debian Live (%s)\n" % (version,)
-            if first:
-                ret += "DEFAULT %s\n" % (label,)
-            ret += "LABEL %s\n" % (label,)
-            if first:
-                ret += "  MENU DEFAULT\n"
-            ret += "  SAY Booting Debian GNU/Linux Live (kernel %s)...\" \n" % (version,)
-            ret += "  KERNEL /live/vmlinuz-%s\n" % (version,)
-            ret += "  APPEND initrd=/live/initrd.img-%s boot=live components\n" % (version,)
-            ret += "\n"
-            first = False
-        return ret
-
-    def generate_di_cfg(self, kernel, ramdisk, gtk=False):  # pylint: disable=no-self-use
-        if gtk:
-            ret = "\n"
-            ret += "LABEL Graphical Debian Installer\n"
-            ret += "  SAY Booting Debian Installer...\" {\n"
-            ret += "  KERNEL /d-i/gtk/%s\n" % os.path.basename(kernel)
-            ret += "  APPEND initrd=/d-i/gtk/%s\n" % os.path.basename(ramdisk)
-            ret += "}\n"
-        else:
-            ret = "\n"
-            ret += "LABEL Debian Installer\n"
-            ret += "  SAY Booting Debian Installer...\" {\n"
-            ret += "  KERNEL /d-i/%s\n" % os.path.basename(kernel)
-            ret += "  APPEND initrd=/d-i/%s\n" % os.path.basename(ramdisk)
-            ret += "}\n"
-        return ret
+def generate_cfg(bootconfig):
+    ret = str()
+    first = True
+    ret += "UI vesamenu.c32\n"
+    ret += "INCLUDE stdmenu.cfg\n"
+    for entry in bootconfig.entries:
+        if entry['type'] is not 'linux':
+            continue
+        label = "%s" % (entry['description'],)
+        if first:
+            ret += "DEFAULT %s\n" % (label,)
+        ret += "LABEL %s\n" % (label,)
+        ret += "  SAY \"Booting %s...\"\n" % (entry['description'],)
+        ret += "  LINUX %s\n" % (entry['kernel'],)
+        if entry.get('initrd') is not None:
+            ret += "  APPEND initrd=%s %s\n" % (entry['initrd'], entry.get('cmdline', ''),)
+        elif entry.get('cmdline') is not None:
+            ret += "  APPEND %s\n" % (entry['cmdline'],)
+        ret += "\n"
+        first = False
+    return ret
 
 def prepare_download(destdir, mirror, suite, architecture):
     apt_handler = AptUdebDownloader(destdir)
@@ -111,25 +80,8 @@ def install_memtest(cdroot, mirror, suite, architecture):
     handler.clean_up_apt()
     shutil.rmtree(destdir)
 
-def add_memtest_menu(cdroot, config_file):
-    memstr='''label memtest
-menu label ^Memory Diagnostic Tool (memtest86+)
-linux ../live/memtest86+.bin
-'''
-    with open("%s/%s" % (cdroot, config_file), "a") as cfgout:
-        cfgout.write(memstr)
 
-
-def add_hdt_menu(cdroot, config_file):
-    hdtstr='''label hdt
-menu label ^Hardware Detection Tool (HDT)
-com32 hdt.c32
-'''
-    with open("%s/%s" % (cdroot, config_file), "a") as cfgout:
-        cfgout.write(hdtstr)
-
-
-def install_isolinux(cdroot, mirror, suite, architecture):
+def install_isolinux(cdroot, mirror, suite, architecture, bootconfig):
     """
     Download and unpack the correct syslinux-common
     and isolinux packages for isolinux support.
@@ -150,6 +102,9 @@ def install_isolinux(cdroot, mirror, suite, architecture):
             shutil.copyfile(
                 os.path.join(destdir, "usr/lib/syslinux/modules/bios/%s" % syslinux_file),
                 "%s/%s" % (cdroot, syslinux_file))
+        shutil.copyfile(
+            os.path.join(destdir, "usr/lib/syslinux/memdisk"),
+            "%s/memdisk" % (cdroot,))
     else:
         handler.clean_up_apt()
         shutil.rmtree(destdir)
@@ -167,15 +122,6 @@ def install_isolinux(cdroot, mirror, suite, architecture):
     handler.clean_up_apt()
     shutil.rmtree(destdir)
 
-def add_live_menu(cdroot, cfg_file):
-    config = ISOLINUXConfig(cdroot)
-    config.detect()
-    with open("%s/%s" % (cdroot, cfg_file), "w") as cfgout:
-        cfgout.write(config.generate_cfg())
-
-def add_installer_menu(cdroot, cfg_file, kernel, ramdisk):
-    config = ISOLINUXConfig(cdroot)
-    config.detect()
-    with open("%s/%s" % (cdroot, cfg_file), "w") as cfgout:
-        cfgout.write(config.generate_di_cfg(kernel, ramdisk, gtk=False))
-        cfgout.write(config.generate_di_cfg(kernel, ramdisk, gtk=True))
+    cfg = generate_cfg(bootconfig)
+    with open("%s/%s" % (cdroot, "menu.cfg"), "w") as cfgout:
+        cfgout.write(cfg)

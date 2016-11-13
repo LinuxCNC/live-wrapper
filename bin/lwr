@@ -26,9 +26,10 @@ import subprocess
 from shutil import rmtree
 from tarfile import TarFile
 from lwr.vm import VMDebootstrap
-from lwr.isolinux import install_isolinux, install_memtest, add_live_menu, add_installer_menu, add_memtest_menu, add_hdt_menu
+from lwr.isolinux import install_isolinux, install_memtest
+from lwr.bootloader import BootloaderConfig
 from lwr.disk import install_disk_info
-from lwr.grub import install_grub, update_grub
+from lwr.grub import install_grub
 from lwr.xorriso import Xorriso
 from lwr.apt_udeb import AptUdebDownloader
 from lwr.utils import cdrom_image_url, KERNEL, RAMDISK
@@ -164,12 +165,12 @@ class LiveWrapper(cliapp.Application):
         urls = cdrom_image_url(mirror, suite, architecture, gtk=False)
         bootdir = os.path.join(self.cdroot, 'boot')
         os.mkdir(bootdir)
-        isolinuxdir = os.path.join(self.cdroot, 'isolinux')
         ditar = tempfile.NamedTemporaryFile(delete=False)  # pylint: disable=redefined-variable-type
         self.download_file(urls[3], ditar)
         ditar.close()
         info = TarFile.open(ditar.name, 'r:gz')
         if self.settings['isolinux']:
+            isolinuxdir = os.path.join(self.cdroot, 'isolinux')
             isolinux_filenames = ['./isolinux.cfg', './stdmenu.cfg', './splash.png']
             isolinux_files = [f for f in info if f.name in isolinux_filenames]
             info.extractall(members=isolinux_files, path=isolinuxdir)
@@ -249,24 +250,6 @@ class LiveWrapper(cliapp.Application):
             self.settings['distribution'],
             self.settings['architecture'])
 
-        isolinuxdir=os.path.join(self.cdroot, 'isolinux')
-        menustr='''menu title Boot menu
-include stdmenu.cfg
-include live.cfg
-include installer.cfg
-menu begin advanced
-        menu title Advanced options
-        label mainmenu
-                menu label ^Back..
-                menu exit
-        include stdmenu.cfg
-        include advanced.cfg
-menu end
-
-menu clear'''
-
-
-
         # Fetch D-I installers if needed???
         if self.settings['installer']:
             print("Fetching Debian Installer")
@@ -299,6 +282,28 @@ menu clear'''
             print("... completed udeb downloads")
             logging.info("... completed udeb downloads")
 
+        # Install memtest86+
+        if self.settings['memtest']:
+            bootdir = os.path.join(self.cdroot, 'boot')
+            logging.info("Performing memtest installation...")
+            install_memtest(bootdir, self.settings['mirror'],
+                self.settings['distribution'],
+                self.settings['architecture'])
+
+        # Generate boot config
+        bootconfig = BootloaderConfig(self.cdroot)
+
+        if os.environ.get("LWR_DEBUG") is None or not 'skipvm' in os.environ['LWR_DEBUG']:
+            bootconfig.add_live()
+        if self.settings['memtest']:
+            bootconfig.add_memtest()
+        if self.settings['hdt']:
+            bootconfig.add_hdt()
+        if self.settings['installer']:
+            bootconfig.add_installer(self.kernel_path, self.ramdisk_path)
+
+        print(repr(bootconfig.entries))
+
         # Install isolinux if selected
         if self.settings['isolinux']:
             logging.info("Performing isolinux installation...")
@@ -307,34 +312,13 @@ menu clear'''
             install_isolinux(
                 bootdir, self.settings['mirror'],
                 self.settings['distribution'],
-                self.settings['architecture'])
-
-            with open ("%s/%s" % (isolinuxdir, 'menu.cfg'), 'w') as config_file:
-                config_file.write(menustr)
-
-            if os.environ.get("LWR_DEBUG") is None or not 'skipvm' in os.environ['LWR_DEBUG']:
-                add_live_menu(isolinuxdir, 'live.cfg')
-            if self.settings['memtest']:
-                add_memtest_menu(isolinuxdir, 'advanced.cfg')
-            if self.settings['hdt']:
-                add_hdt_menu(isolinuxdir, 'advanced.cfg')
-            if self.settings['installer']:
-                add_installer_menu(isolinuxdir, 'installer.cfg', self.kernel_path, self.ramdisk_path)
+                self.settings['architecture'],
+                bootconfig)
 
         # Install GRUB if selected
         if self.settings['grub'] or self.settings['grub-loopback-only']:
             logging.info("Performing GRUB installation...")
-            install_grub(self.cdroot) # FIXME: pass architecture & uefi settings.
-            if self.settings['installer']:
-                update_grub(self.cdroot, self.kernel_path, self.ramdisk_path)
-
-        # Install memtest86+
-        if self.settings['memtest']:
-            bootdir = os.path.join(self.cdroot, 'live')
-            logging.info("Performing memtest installation...")
-            install_memtest(bootdir, self.settings['mirror'],
-                self.settings['distribution'],
-                self.settings['architecture'])
+            install_grub(self.cdroot, bootconfig) # FIXME: pass architecture & uefi settings.
 
         # Install .disk information
         logging.info("Installing the disk metadata ...")
