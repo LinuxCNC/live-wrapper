@@ -13,9 +13,6 @@ intended to be run from the command line.
 See live-wrapper(8) for more information.
 """
 
-# pylint: disable=wrong-import-order,missing-docstring,superfluous-parens
-# pylint: disable=too-many-statements,invalid-name
-
 import sys
 import os
 import cliapp
@@ -33,35 +30,9 @@ from lwr.grub import install_grub
 from lwr.xorriso import Xorriso
 from lwr.apt_udeb import AptUdebDownloader
 from lwr.utils import cdrom_image_url, KERNEL, RAMDISK
+from lwr.cdroot import CDRoot
 
 __version__ = '0.4'
-
-# pylint: disable=line-too-long,too-many-function-args
-
-# FIXME: make these available as lookups - single place to change.
-directories = {
-    'cdroot': '/',
-    'boot': {
-        'boot': '%s/boot/' % 'cdroot',  # fetch_di_helpers
-        'boot/grub': '%s/boot/grub/' % 'cdroot',  # created by fetch_di_helpers
-    },
-    'isolinux': '%s/isolinux/' % 'cdroot',  # isolinux directory
-    'd-i': {
-        '%s/d-i/gtk' % 'cdroot',  # installer kernel & ramdisk
-    },
-    'pool': '%s/pool/' % 'cdroot',
-    'dists': '%s/dists/' % 'cdroot',
-    'metadata': '%s/.disk' % 'cdroot',  # disk.py
-    'live': '%s/live/' % 'cdroot',
-}
-
-# FIXME: ISOLINUX looks in boot/isolinux, isolinux and then / - not just boot.
-# splash.png needs to be in isolinux/
-
-# Need to edit the D-I menu to add the Live! boot whilst allowing
-# access to the D-I boot options.
-# grub still not finding modules.
-
 
 class LiveWrapper(cliapp.Application):
 
@@ -129,11 +100,6 @@ class LiveWrapper(cliapp.Application):
                     '"stderr" to log to the standard error output, '
                     'or "none" to disable logging',
                     metavar='FILE', group=log_group_name, default='stderr')
-        self.settings.choice(['log-level'],
-                    ['info', 'debug', 'warning', 'error', 'critical', 'fatal'],
-                    'log at LEVEL, one of debug, info, warning, '
-                    'error, critical, fatal (default: %default)',
-                    metavar='LEVEL', group=log_group_name)
 
     def process_args(self, args):
         if os.path.exists(self.settings['image_output']):
@@ -163,19 +129,19 @@ class LiveWrapper(cliapp.Application):
     def fetch_di_helpers(self, mirror, suite, architecture):
         logging.info("Downloading helper files from debian-installer team...")
         urls = cdrom_image_url(mirror, suite, architecture, gtk=False)
-        bootdir = os.path.join(self.cdroot, 'boot')
-        os.mkdir(bootdir)
+        bootdir = self.cdroot['boot'].path
         ditar = tempfile.NamedTemporaryFile(delete=False)  # pylint: disable=redefined-variable-type
         self.download_file(urls[3], ditar)
         ditar.close()
         info = TarFile.open(ditar.name, 'r:gz')
         if self.settings['isolinux']:
-            isolinuxdir = os.path.join(self.cdroot, 'isolinux')
+            isolinuxdir = self.cdroot['isolinux'].path
             isolinux_filenames = ['./isolinux.cfg', './stdmenu.cfg', './splash.png']
             isolinux_files = [f for f in info if f.name in isolinux_filenames]
             info.extractall(members=isolinux_files, path=isolinuxdir)
         if self.settings['grub']:
-            os.mkdir(os.path.join(self.cdroot, 'boot', 'grub'))
+            # The act of fetching the path creates the directory
+            logging.info("Created GRUB directory at %s" % (self.cdroot['boot']['grub'].path,))
             grub_files = [f for f in info if f.name.startswith('./grub/')]
             info.extractall(members=grub_files, path=bootdir)
         info.close()
@@ -183,11 +149,12 @@ class LiveWrapper(cliapp.Application):
 
     def fetch_di_installer(self, mirror, suite, architecture):
         logging.info("Downloading installer files from debian-installer team...")
-        bootdir = os.path.join(self.cdroot, 'boot')
+        bootdir = self.cdroot['boot'].path
         if self.settings['installer']:
-            os.makedirs(os.path.join(self.cdroot, 'd-i', 'gtk'))
-            self.kernel_path = os.path.join(self.cdroot, 'd-i', KERNEL)
-            self.ramdisk_path = os.path.join(self.cdroot, 'd-i', RAMDISK)
+            logging.debug("Created d-i kernel and ramdisk directory at %s" % (self.cdroot['d-i'].path,))
+            logging.debug("Created d-i GTK kernel and ramdisk directory at %s" % (self.cdroot['d-i']['gtk'].path,))
+            self.kernel_path = os.path.join(self.cdroot['d-i'].path, KERNEL)
+            self.ramdisk_path = os.path.join(self.cdroot['d-i'].path, RAMDISK)
 
         if self.settings['installer']:
             # fetch debian-installer
@@ -199,8 +166,8 @@ class LiveWrapper(cliapp.Application):
 
             # Now get the graphical installer.
             urls = cdrom_image_url(mirror, suite, architecture, gtk=True)
-            self.gtk_kernel_path = os.path.join(self.cdroot, 'd-i', 'gtk', KERNEL)
-            self.gtk_ramdisk_path = os.path.join(self.cdroot, 'd-i', 'gtk', RAMDISK)
+            self.gtk_kernel_path = os.path.join(self.cdroot['d-i']['gtk'].path, KERNEL)
+            self.gtk_ramdisk_path = os.path.join(self.cdroot['d-i']['gtk'].path, RAMDISK)
             with open(self.gtk_kernel_path, 'w') as kernel:
                 self.download_file(urls[1], kernel)
             with open(self.gtk_ramdisk_path, 'w') as ramdisk:
@@ -217,9 +184,9 @@ class LiveWrapper(cliapp.Application):
         """
 
         # Create work directory
-        self.cdroot = tempfile.mkdtemp()  # all other directories are based off this
+        self.cdroot = CDRoot()  # all other directories are based off this
         logging.debug("Created temporary work directory (cdroot) at %s."
-                      % (self.cdroot,))
+                      % (self.cdroot.path,))
 
         # Make options available to customise hook in vmdebootstrap
         os.environ['LWR_MIRROR'] = self.settings['mirror']
@@ -234,13 +201,12 @@ class LiveWrapper(cliapp.Application):
         # Run vmdebootstrap, putting files in /live/
         if os.environ.get("LWR_DEBUG") and "skipvm" in os.environ.get('LWR_DEBUG'):
             logging.warning("The debug option to skip running vmdebootstrap was enabled.")
-            logging.info("Creating a dummy live/ directory, but not installing a live system.")
-            os.mkdir(os.path.join(self.cdroot, "live"))
+            logging.info("Creating a dummy live/ directory at %s, but not installing a live system." % (self.cdroot['live'].path,))
         else:
             logging.info("Running vmdebootstrap...")
             vm = VMDebootstrap(self.settings['distribution'],
                                self.settings['architecture'],
-                               self.settings['mirror'], self.cdroot)
+                               self.settings['mirror'], self.cdroot.path)
             vm.run()
 
         # Initialise menu
@@ -265,7 +231,7 @@ class LiveWrapper(cliapp.Application):
             # FIXME: get exclude_list from user
             exclude_list = []
             # FIXME: may need a change to the download location
-            di_root = os.path.join(self.cdroot, 'd-i')
+            di_root = self.cdroot['d-i'].path
             apt_udeb = AptUdebDownloader(destdir=di_root)
             apt_udeb.mirror = self.settings['mirror']
             apt_udeb.architecture = self.settings['architecture']
@@ -284,33 +250,33 @@ class LiveWrapper(cliapp.Application):
 
         # Install memtest86+
         if self.settings['memtest']:
-            bootdir = os.path.join(self.cdroot, 'boot')
+            bootdir = self.cdroot['boot'].path
             logging.info("Performing memtest installation...")
             install_memtest(bootdir, self.settings['mirror'],
                 self.settings['distribution'],
                 self.settings['architecture'])
 
         # Generate boot config
-        bootconfig = BootloaderConfig(self.cdroot)
+        bootconfig = BootloaderConfig(self.cdroot.path)
 
         if os.environ.get("LWR_DEBUG") is None or not 'skipvm' in os.environ['LWR_DEBUG']:
             bootconfig.add_live()
+        if self.settings['installer']:
+            bootconfig.add_installer(self.kernel_path, self.ramdisk_path)
         if self.settings['memtest']:
             bootconfig.add_memtest()
         if self.settings['hdt']:
             bootconfig.add_hdt()
-        if self.settings['installer']:
-            bootconfig.add_installer(self.kernel_path, self.ramdisk_path)
 
         print(repr(bootconfig.entries))
 
         # Install isolinux if selected
         if self.settings['isolinux']:
             logging.info("Performing isolinux installation...")
-            bootdir = os.path.join(self.cdroot, 'isolinux')
             # FIXME: catch errors and cleanup.
             install_isolinux(
-                bootdir, self.settings['mirror'],
+                self.cdroot['isolinux'].path,
+                self.settings['mirror'],
                 self.settings['distribution'],
                 self.settings['architecture'],
                 bootconfig)
@@ -318,25 +284,24 @@ class LiveWrapper(cliapp.Application):
         # Install GRUB if selected
         if self.settings['grub'] or self.settings['grub-loopback-only']:
             logging.info("Performing GRUB installation...")
-            install_grub(self.cdroot, bootconfig) # FIXME: pass architecture & uefi settings.
+            install_grub(self.cdroot.path, bootconfig) # FIXME: pass architecture & uefi settings.
 
         # Install .disk information
         logging.info("Installing the disk metadata ...")
-        install_disk_info(self.cdroot)
+        install_disk_info(self.cdroot.path)
 
         # Create ISO image
         logging.info("Creating the ISO image with Xorriso...")
         xorriso = Xorriso(self.settings['image_output'],
                           isolinux=self.settings['isolinux'],
                           grub=self.settings['grub'])
-        xorriso.build_args(self.cdroot)
+        xorriso.build_args(self.cdroot.path)
         xorriso.build_image()
 
         # Remove the temporary directories
         logging.info("Removing temporary work directories...")
         if self.settings['installer']:
             apt_udeb.clean_up_apt()
-        # rmtree(self.cdroot)
         print("Use the -cdrom option to test the image using qemu-system.")
 
 if __name__ == "__main__":
