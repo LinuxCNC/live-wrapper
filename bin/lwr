@@ -90,7 +90,7 @@ class LiveWrapper(cliapp.Application):
             ['hdt'], 'Include HDT in the Live image',
             default=False, group="Debian Installer")
         # Logging overrides
-        for s in ['log', 'log-level']:
+        for s in ['log']:
             self.settings._canonical_names.remove(s)
             self.settings._settingses.pop(s)
         log_group_name = 'Logging'
