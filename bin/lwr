@@ -82,7 +82,7 @@ class LiveWrapper(cliapp.Application):
             '(default: %default)', default=False, group="Bootloaders")
         self.settings.boolean(
             ['installer'], 'Include Debian Installer in the Live image',
-            default=False, group="Debian Installer")
+            default=True, group="Debian Installer")
         self.settings.boolean(
             ['memtest'], 'Include memtest86+ in the Live image',
             default=False, group="Debian Installer")
