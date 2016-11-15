@@ -108,6 +108,8 @@ class LiveWrapper(cliapp.Application):
             raise cliapp.AppException("You must enable at least one bootloader!")
         if self.settings['grub'] and self.settings['grub-loopback-only']:
             self.settings['grub'] = False
+        if self.settings['hdt'] and not self.settings['isolinux']:
+            raise cliapp.AppException("You cannot select HDT without selecting ISOLINUX.")
         if os.geteuid() != 0:
             sys.exit("You need to have root privileges to run this script.")
         if not self.settings['log']:
