@@ -1,3 +1,40 @@
+live-wrapper (0.5) unstable; urgency=medium
+
+  [ Iain R. Learmonth ]
+  * Core:
+   - Logging has seen some improvements
+   - Subdirectories within the CD root are now handled by a helper class
+  * Installer:
+   - Live image builds will now have installers by default
+   - Daily builds, not release builds, are now used (an option to select this
+     will appear in a future version)
+   - Packages and Release files are generated for the CD-ROM pool
+   - Hardcoded disk metadata (.disk) is added to enable the installer
+  * Live System:
+   - Default customise script fixes permissions on squashfs root (workaround
+     for #843983)
+   - systemd-networkd is no longer used in the live system
+  * Bootloaders:
+   - Bootloader files are only installed in the CD root when requested
+   - Bootloader configurations are now shared between ISOLINUX and GRUB
+
+  [ Ana C. Custura ]
+  * Utilities:
+   - memtest86+ can now be installed into the image through a command line flag
+   - Hardware Detection Tool can now be installed into the image through a
+     command line flag (not yet installed in the bootloader menu though)
+  * Bootloaders:
+   - Menu entries for booting memtest86+ and HDT exist in the abstract
+     configuration (though are not yet serialised to the configurations
+     written)
+   - The installer can now be launched from either bootloader, either text-mode
+     or graphical
+
+  Thanks to the sponsors of the vmdebootstrap sprint, where the majority of
+  these changes were made.
+
+ -- Iain R. Learmonth <irl@debian.org>  Wed, 16 Nov 2016 09:54:04 +0000
+
 live-wrapper (0.4) unstable; urgency=medium
 
   [ Iain R. Learmonth ]
