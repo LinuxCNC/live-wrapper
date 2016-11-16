@@ -43,7 +43,7 @@ class BootloaderConfig(object):
     def add_memtest(self):
         self.entries.append({
                              'description': 'memtest86',
-                             'type': 'linux',
+                             'type': 'linux16',
                              'kernel': '/boot/memtest86+.bin',
                             })
 
@@ -61,3 +61,10 @@ class BootloaderConfig(object):
                              'type': 'menu',
                              'subentries': loadercfg,
                             })
+
+    def is_empty(self, supported_types):
+        for entry in self.entries:
+            if entry['type'] in supported_types:
+                print("Found %r in %r" % (entry, supported_types,))
+                return False
+        return True

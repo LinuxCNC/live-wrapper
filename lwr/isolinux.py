@@ -39,6 +39,8 @@ def generate_cfg(bootconfig, submenu=False):
     for entry in bootconfig.entries:
         label = "%s" % (entry['description'],)
         if entry['type'] is 'menu':
+           if entry['subentries'].is_empty(["menu", "linux", "linux16", "com32"]):
+               continue
            ret += "MENU begin advanced\n"
            ret += "MENU title %s\n" % (label,)
            ret += generate_cfg(entry['subentries'], submenu=True) 
@@ -50,7 +52,8 @@ def generate_cfg(bootconfig, submenu=False):
         if first:
             ret += "DEFAULT %s\n" % (label,)
             first = False
-        if entry['type'] is 'linux' or entry['type'] is 'com32':
+        if entry['type'].startswith('linux') or entry['type'] is 'com32':
+            type = 'linux' if entry['type'].startswith('linux') else entry['type']
             ret += "LABEL %s\n" % (label,)
             ret += "  SAY \"Booting %s...\"\n" % (entry['description'],)
             ret += "  %s %s\n" % (entry['type'], entry['kernel'],)

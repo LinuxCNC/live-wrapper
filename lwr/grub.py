@@ -20,6 +20,8 @@ def generate_cfg(bootconfig, submenu=False):
         ret = str()
     for entry in bootconfig.entries:
         if entry['type'] == "menu":
+            if entry['subentries'].is_empty(["linux", "menu"]):
+                continue
             ret += "submenu \"%s\" {\n"  % (entry['description'],)
             ret += generate_cfg(entry['subentries'], submenu=True)
             ret += "}\n"
