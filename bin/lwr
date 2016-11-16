@@ -26,6 +26,7 @@ from lwr.vm import VMDebootstrap
 from lwr.isolinux import install_isolinux, install_memtest
 from lwr.bootloader import BootloaderConfig
 from lwr.disk import install_disk_info
+from lwr.disk import get_default_description
 from lwr.grub import install_grub
 from lwr.xorriso import Xorriso
 from lwr.apt_udeb import AptUdebDownloader
@@ -62,6 +63,14 @@ class LiveWrapper(cliapp.Application):
             metavar='MIRROR',
             group='Base Settings',
             default='http://ftp.debian.org/debian/')
+        self.settings.string(
+	    ['description'], 'Description for the image to be created. A '
+			     'description will be automatically generated based '
+			     'on the distribution chosen if none is specified. '
+                             '(default: %s)' % (get_default_description(None),),
+            metavar='DESCRIPTION',
+            group='Base Settings',
+            default=None)
         self.settings.string(
             ['t', 'tasks'], 'Task packages to install',
             metavar='"task-TASK1 task-TASK2 ..."',
@@ -112,8 +121,6 @@ class LiveWrapper(cliapp.Application):
             raise cliapp.AppException("You cannot select HDT without selecting ISOLINUX.")
         if os.geteuid() != 0:
             sys.exit("You need to have root privileges to run this script.")
-        if not self.settings['log']:
-            self.settings['log'] = "stderr"
         # FIXME: cleanup on error.
         self.start_ops()
 
@@ -290,7 +297,9 @@ class LiveWrapper(cliapp.Application):
 
         # Install .disk information
         logging.info("Installing the disk metadata ...")
-        install_disk_info(self.cdroot.path)
+        install_disk_info(self.cdroot, self.settings['description'] if
+                                       self.settings['description'] else
+                                       get_default_description(self.settings['distribution']))
 
         # Create ISO image
         logging.info("Creating the ISO image with Xorriso...")
