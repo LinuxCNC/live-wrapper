@@ -47,6 +47,7 @@ def cdrom_image_url(mirror, suite, architecture, gtk=False):
     else:
         path = 'main/installer-%s/current/images/cdrom/' % architecture
     base_url = urlparse.urljoin(suite_url, path)
+    base_url = "https://d-i.debian.org/daily-images/amd64/daily/cdrom/"
     kernel = urlparse.urljoin(base_url, KERNEL)
     ramdisk = urlparse.urljoin(base_url, RAMDISK)
     cd_info = urlparse.urljoin(base_url, CD_INFO)
