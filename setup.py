@@ -43,5 +43,9 @@ setup(
         'requests',
         'python-apt'
     ],
-    scripts=['bin/lwr']
+    entry_points={
+        'console_scripts': [
+            'lwr = lwr.run:main',
+        ],
+    },
 )

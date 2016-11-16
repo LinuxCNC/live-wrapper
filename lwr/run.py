@@ -1,10 +1,8 @@
-#!/usr/bin/env python
-
 # live-wrapper - Wrapper for vmdebootstrap for creating live images
 # (C) Iain R. Learmonth 2015 <irl@debian.org>
 # See COPYING for terms of usage, modification and redistribution.
 #
-# bin/lwr - Live Wrapper (Application)
+# lwr/run.py - Live Wrapper (Application)
 
 """
 This script is the main script for the live-wrapper application. It is
@@ -317,5 +315,5 @@ class LiveWrapper(cliapp.Application):
             apt_udeb.clean_up_apt()
         print("Use the -cdrom option to test the image using qemu-system.")
 
-if __name__ == "__main__":
+def main():
     LiveWrapper(version=__version__).run()
