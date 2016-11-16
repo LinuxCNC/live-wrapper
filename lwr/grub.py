@@ -12,11 +12,18 @@ files.
 
 import os
 
-def generate_cfg(bootconfig):
-    ret = ("if [ ${iso_path} ] ; then\nset loopback=\"" +
-           "findiso=${iso_path}\"\nfi\n\n")
+def generate_cfg(bootconfig, submenu=False):
+    if not submenu:
+        ret = ("if [ ${iso_path} ] ; then\nset loopback=\"" +
+               "findiso=${iso_path}\"\nfi\n\n")
+    else:
+        ret = str()
     for entry in bootconfig.entries:
-        if entry['type'] == "linux":
+        if entry['type'] == "menu":
+            ret += "submenu \"%s\" {\n"  % (entry['description'],)
+            ret += generate_cfg(entry['subentries'], submenu=True)
+            ret += "}\n"
+        if entry['type'] == "linux": 
             ret += "menuentry \"%s\" {\n" % (entry['description'],)
             ret += "  linux  %s %s \"${loopback}\"\n" % (entry['kernel'], entry.get('cmdline', ''),)
             if entry.get('initrd') is not None:
