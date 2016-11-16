@@ -177,22 +177,11 @@ class AptUdebDownloader(object):
                 shutil.rmtree(clean)
 
 
-def main():
-    apt_udeb = AptUdebDownloader('/tmp/test/')
-    apt_udeb.mirror = "http://localhost/mirror/debian"
-    apt_udeb.architecture = 'amd64'
-    apt_udeb.suite = 'stable'
-    apt_udeb.components = ['main']
-    apt_udeb.prepare_apt()
-    # apt_udeb.download_udebs([])
-    destdir = tempfile.mkdtemp()
-    filename = apt_udeb.download_package('syslinux-common', destdir)
-    apt_udeb.clean_up_apt()
-    runcmd(['dpkg', '-x', filename, destdir])
-    ret = os.path.join(destdir, 'usr', 'lib')
-    if os.path.exists(ret):
-        return ret
-
-
-if __name__ == '__main__':
-    sys.exit(main())
+def get_apt_handler(destdir, mirror, suite, architecture):
+    apt_handler = AptUdebDownloader(destdir)
+    apt_handler.mirror = mirror
+    apt_handler.architecture = architecture
+    apt_handler.suite = suite
+    apt_handler.components = ['main']
+    apt_handler.prepare_apt()
+    return apt_handler

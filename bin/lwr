@@ -23,7 +23,8 @@ import subprocess
 from shutil import rmtree
 from tarfile import TarFile
 from lwr.vm import VMDebootstrap
-from lwr.isolinux import install_isolinux, install_memtest
+from lwr.isolinux import install_isolinux
+from lwr.memtest import install_memtest
 from lwr.bootloader import BootloaderConfig
 from lwr.disk import install_disk_info
 from lwr.disk import get_default_description
@@ -279,8 +280,6 @@ class LiveWrapper(cliapp.Application):
             if self.settings['hdt']:
                 diagconfig.add_hdt()
             bootconfig.add_submenu("Diagnostic Tools", diagconfig)
-
-        print(repr(bootconfig.entries))
 
         # Install isolinux if selected
         if self.settings['isolinux']:

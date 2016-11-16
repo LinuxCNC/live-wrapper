@@ -23,7 +23,7 @@ import tempfile
 import cliapp
 from vmdebootstrap.base import runcmd
 from lwr.vm import detect_kernels
-from lwr.apt_udeb import AptUdebDownloader
+from lwr.apt_udeb import get_apt_handler
 
 # pylint: disable=missing-docstring
 
@@ -61,38 +61,6 @@ def generate_cfg(bootconfig, submenu=False):
         ret += "\n"
     return ret
 
-def prepare_download(destdir, mirror, suite, architecture):
-    apt_handler = AptUdebDownloader(destdir)
-    apt_handler.mirror = mirror
-    apt_handler.architecture = architecture
-    apt_handler.suite = suite
-    apt_handler.components = ['main']
-    apt_handler.prepare_apt()
-    return apt_handler
-
-
-def install_memtest(cdroot, mirror, suite, architecture):
-    """
-    Download and unpack the memtest86+ package.
-    """
-    destdir = tempfile.mkdtemp()
-    handler = prepare_download(destdir, mirror, suite, architecture)
-    filename = handler.download_package('memtest86+', destdir)
-    # these files are put directly into cdroot/live
-    memtest86_file = 'memtest86+.bin'
-    if filename:
-        runcmd(['dpkg', '-x', filename, destdir])
-        shutil.copyfile(
-            os.path.join(destdir, "boot/%s" % memtest86_file),
-            "%s/%s" % (cdroot, memtest86_file))
-    else:
-        handler.clean_up_apt()
-        shutil.rmtree(destdir)
-        raise cliapp.AppException('Unable to download memtest86+')
-    handler.clean_up_apt()
-    shutil.rmtree(destdir)
-
-
 def install_isolinux(cdroot, mirror, suite, architecture, bootconfig):
     """
     Download and unpack the correct syslinux-common
@@ -101,7 +69,7 @@ def install_isolinux(cdroot, mirror, suite, architecture, bootconfig):
     This function puts all files into isolinux/
     """
     destdir = tempfile.mkdtemp()
-    handler = prepare_download(destdir, mirror, suite, architecture)
+    handler = get_apt_handler(destdir, mirror, suite, architecture)
     filename = handler.download_package('syslinux-common', destdir)
     # these files are put directly into cdroot/isolinux
     syslinux_files = [
