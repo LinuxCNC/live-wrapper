@@ -31,11 +31,10 @@ def generate_cfg(bootconfig, submenu=False):
     ret = str()
     if not submenu:
         first = True
-        # ADD TITLE "Main Boot Menu"
-        ret += "UI vesamenu.c32\n"
+        ret += "INCLUDE stdmenu.cfg\n"
+        ret += "MENU title Main Menu\n"
     else:
         first = False
-    ret += "INCLUDE stdmenu.cfg\n"
      
     for entry in bootconfig.entries:
         label = "%s" % (entry['description'],)

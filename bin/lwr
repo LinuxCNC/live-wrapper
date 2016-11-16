@@ -272,10 +272,13 @@ class LiveWrapper(cliapp.Application):
             bootconfig.add_live()
         if self.settings['installer']:
             bootconfig.add_installer(self.kernel_path, self.ramdisk_path)
-        if self.settings['memtest']:
-            bootconfig.add_memtest()
-        if self.settings['hdt']:
-            bootconfig.add_hdt()
+        if self.settings['memtest'] or self.settings['hdt']:
+            diagconfig = BootloaderConfig(self.cdroot.path)
+            if self.settings['memtest']:
+                diagconfig.add_memtest()
+            if self.settings['hdt']:
+                diagconfig.add_hdt()
+            bootconfig.add_submenu("Diagnostic Tools", diagconfig)
 
         print(repr(bootconfig.entries))
 
