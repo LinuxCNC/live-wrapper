@@ -1,5 +1,4 @@
 Allow custom kernel command line
-Build xorriso and vmdebootstrap args from cli options
 Pass extra options to vmdebootstrap
 Validate anything downloaded by curl - check with debian-ftp or d-i how to validate
 Logging everything
