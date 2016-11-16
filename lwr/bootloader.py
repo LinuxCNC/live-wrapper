@@ -55,3 +55,9 @@ class BootloaderConfig(object):
                              'kernel': '/isolinux/hdt.c32',
                             })
 
+    def add_submenu(self, description, loadercfg):
+        self.entries.append({
+                             'description': '%s' % (description),
+                             'type': 'menu',
+                             'subentries': loadercfg,
+                            })

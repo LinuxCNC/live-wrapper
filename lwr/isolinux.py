@@ -27,26 +27,39 @@ from lwr.apt_udeb import AptUdebDownloader
 
 # pylint: disable=missing-docstring
 
-def generate_cfg(bootconfig):
+def generate_cfg(bootconfig, submenu=False):
     ret = str()
-    first = True
-    ret += "UI vesamenu.c32\n"
+    if not submenu:
+        first = True
+        # ADD TITLE "Main Boot Menu"
+        ret += "UI vesamenu.c32\n"
+    else:
+        first = False
     ret += "INCLUDE stdmenu.cfg\n"
+     
     for entry in bootconfig.entries:
-        if entry['type'] is not 'linux':
-            continue
         label = "%s" % (entry['description'],)
+        if entry['type'] is 'menu':
+           ret += "MENU begin advanced\n"
+           ret += "MENU title %s\n" % (label,)
+           ret += generate_cfg(entry['subentries'], submenu=True) 
+           ret += " LABEL mainmenu \n "
+           ret += " MENU label Back\n "
+           ret += " MENU exit\n "
+          
+        # do not want to default to menus
         if first:
             ret += "DEFAULT %s\n" % (label,)
-        ret += "LABEL %s\n" % (label,)
-        ret += "  SAY \"Booting %s...\"\n" % (entry['description'],)
-        ret += "  LINUX %s\n" % (entry['kernel'],)
-        if entry.get('initrd') is not None:
-            ret += "  APPEND initrd=%s %s\n" % (entry['initrd'], entry.get('cmdline', ''),)
-        elif entry.get('cmdline') is not None:
-            ret += "  APPEND %s\n" % (entry['cmdline'],)
+            first = False
+        if entry['type'] is 'linux' or entry['type'] is 'com32':
+            ret += "LABEL %s\n" % (label,)
+            ret += "  SAY \"Booting %s...\"\n" % (entry['description'],)
+            ret += "  %s %s\n" % (entry['type'], entry['kernel'],)
+            if entry.get('initrd') is not None:
+                ret += "  APPEND initrd=%s %s\n" % (entry['initrd'], entry.get('cmdline', ''),)
+            elif entry.get('cmdline') is not None:
+                ret += "  APPEND %s\n" % (entry['cmdline'],)
         ret += "\n"
-        first = False
     return ret
 
 def prepare_download(destdir, mirror, suite, architecture):
