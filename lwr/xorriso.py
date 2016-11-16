@@ -37,12 +37,6 @@ class Xorriso(object):
         self.args.extend(['-outdev', self.image_output])
         self.args.extend(['map', cdroot, '/'])
 
-        # sudo xorriso -outdev jessie-live-uefi.iso map /tmp/tmpqb3AII /
-        # -as mkisofs -b isolinux.bin -c boot.cat -boot-load-size 4
-        # -boot-info-table -no-emul-boot -eltorito-alt-boot
-        # -e grub/efi.img -no-emul-boot -isohybrid-gpt-basdat
-
-
         if self.isolinux:
             self.args.extend(['-boot_image', 'isolinux', 'dir=/isolinux',
                               '-boot_image', 'isolinux',
@@ -51,8 +45,8 @@ class Xorriso(object):
         if self.grub:
             self.args.extend(['-boot_image', 'any', 'next',
                               '-boot_image', 'any', 'efi_path=boot/grub/efi.img',
-                              '-boot_image', 'isolinux',
-                              'partition_entry=gpt_basdat'])
+                              '-boot_image', 'isolinux', 'partition_entry=gpt_basdat'
+                             ])
 
         return self.args
 
