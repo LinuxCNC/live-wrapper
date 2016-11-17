@@ -30,12 +30,8 @@ from vmdebootstrap.base import runcmd
 
 class VMDebootstrap(object):
 
-    def __init__(self, distribution, architecture, mirror=None, cdroot='/tmp/'):
+    def __init__(self, distribution, architecture, mirror, cdroot):
         self.cdroot = cdroot
-        # FIXME: The customise script needs to be specified in the command line
-        # arguments, falling back to /usr/share/vmdebootstrap/hooks/customise.sh
-        # if no script is specified and hooks/customise.sh does not exist in
-        # the current directory.
         self.args = ["vmdebootstrap",
                      "--sudo", "--lock-root-password",
                      "--no-systemd-networkd",
