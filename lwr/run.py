@@ -90,6 +90,9 @@ class LiveWrapper(cliapp.Application):
         self.settings.boolean(
             ['installer'], 'Include Debian Installer in the Live image',
             default=True, group="Debian Installer")
+        self.settings.boolean(
+            ['di-daily'], 'Use the daily Debian Installer builds not releases',
+            default=False, group="Debian Installer")
         # Logging overrides
         for s in ['log']:
             self.settings._canonical_names.remove(s)
@@ -127,7 +130,7 @@ class LiveWrapper(cliapp.Application):
 
     def fetch_di_helpers(self, mirror, suite, architecture):
         logging.info("Downloading helper files from debian-installer team...")
-        urls = cdrom_image_url(mirror, suite, architecture, gtk=False)
+        urls = cdrom_image_url(mirror, suite, architecture, gtk=False, daily=self.settings['di-daily'])
         bootdir = self.cdroot['boot'].path
         ditar = tempfile.NamedTemporaryFile(delete=False)  # pylint: disable=redefined-variable-type
         self.download_file(urls[3], ditar)
@@ -157,14 +160,14 @@ class LiveWrapper(cliapp.Application):
 
         if self.settings['installer']:
             # fetch debian-installer
-            urls = cdrom_image_url(mirror, suite, architecture, gtk=False)
+            urls = cdrom_image_url(mirror, suite, architecture, gtk=False, daily=self.settings['di-daily'])
             with open(self.kernel_path, 'w') as kernel:
                 self.download_file(urls[1], kernel)
             with open(self.ramdisk_path, 'w') as ramdisk:
                 self.download_file(urls[2], ramdisk)
 
             # Now get the graphical installer.
-            urls = cdrom_image_url(mirror, suite, architecture, gtk=True)
+            urls = cdrom_image_url(mirror, suite, architecture, gtk=True, daily=self.settings['di-daily'])
             self.gtk_kernel_path = os.path.join(self.cdroot['d-i']['gtk'].path, KERNEL)
             self.gtk_ramdisk_path = os.path.join(self.cdroot['d-i']['gtk'].path, RAMDISK)
             with open(self.gtk_kernel_path, 'w') as kernel:

@@ -30,24 +30,28 @@ def check_url(url):
         if res.status_code != requests.codes.OK:  # pylint: disable=no-member
             raise cliapp.AppException("Resources not available at '%s'" % url)
 
-def cdrom_image_url(mirror, suite, architecture, gtk=False):
+def cdrom_image_url(mirror, suite, architecture, gtk=False, daily=False):
     """
     Create checked URLs for the di helpers.
     Returns a tuple of base_url, kernel, ramdisk, cd_info in that order.
     """
-    # urlparse.urljoin refuses to use existing subdirs which start with /
-    if not mirror.endswith('/'):
-        mirror += '/'
-    dist_url = urlparse.urljoin(mirror, 'dists/')
-    if not suite.endswith('/'):
-        suite += '/'
-    suite_url = urlparse.urljoin(dist_url, suite)
-    if gtk:
-        path = 'main/installer-%s/current/images/cdrom/gtk/' % architecture
+    if not daily:
+        # urlparse.urljoin refuses to use existing subdirs which start with /
+        if not mirror.endswith('/'):
+            mirror += '/'
+        dist_url = urlparse.urljoin(mirror, 'dists/')
+        if not suite.endswith('/'):
+            suite += '/'
+        suite_url = urlparse.urljoin(dist_url, suite)
+        if gtk:
+            path = 'main/installer-%s/current/images/cdrom/gtk/' % architecture
+        else:
+            path = 'main/installer-%s/current/images/cdrom/' % architecture
+        base_url = urlparse.urljoin(suite_url, path)
     else:
-        path = 'main/installer-%s/current/images/cdrom/' % architecture
-    base_url = urlparse.urljoin(suite_url, path)
-    base_url = "https://d-i.debian.org/daily-images/amd64/daily/cdrom/"
+        base_url = "https://d-i.debian.org/daily-images/%s/daily/cdrom/" % architecture
+        if gtk:
+            base_url += "gtk/"
     kernel = urlparse.urljoin(base_url, KERNEL)
     ramdisk = urlparse.urljoin(base_url, RAMDISK)
     cd_info = urlparse.urljoin(base_url, CD_INFO)
