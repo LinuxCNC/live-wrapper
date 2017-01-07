@@ -31,7 +31,7 @@ from lwr.apt_udeb import AptUdebDownloader
 from lwr.utils import cdrom_image_url, KERNEL, RAMDISK
 from lwr.cdroot import CDRoot
 
-__version__ = '0.4'
+__version__ = '0.6'
 
 class LiveWrapper(cliapp.Application):
 
