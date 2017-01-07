@@ -22,7 +22,6 @@ from shutil import rmtree
 from tarfile import TarFile
 from lwr.vm import VMDebootstrap
 from lwr.isolinux import install_isolinux
-from lwr.memtest import install_memtest
 from lwr.bootloader import BootloaderConfig
 from lwr.disk import install_disk_info
 from lwr.disk import get_default_description
@@ -91,12 +90,6 @@ class LiveWrapper(cliapp.Application):
         self.settings.boolean(
             ['installer'], 'Include Debian Installer in the Live image',
             default=True, group="Debian Installer")
-        self.settings.boolean(
-            ['memtest'], 'Include memtest86+ in the Live image',
-            default=False, group="Debian Installer")
-        self.settings.boolean(
-            ['hdt'], 'Include HDT in the Live image',
-            default=False, group="Debian Installer")
         # Logging overrides
         for s in ['log']:
             self.settings._canonical_names.remove(s)
@@ -116,8 +109,6 @@ class LiveWrapper(cliapp.Application):
             raise cliapp.AppException("You must enable at least one bootloader!")
         if self.settings['grub'] and self.settings['grub-loopback-only']:
             self.settings['grub'] = False
-        if self.settings['hdt'] and not self.settings['isolinux']:
-            raise cliapp.AppException("You cannot select HDT without selecting ISOLINUX.")
         if os.geteuid() != 0:
             sys.exit("You need to have root privileges to run this script.")
         # FIXME: cleanup on error.
@@ -256,14 +247,6 @@ class LiveWrapper(cliapp.Application):
             print("... completed udeb downloads")
             logging.info("... completed udeb downloads")
 
-        # Install memtest86+
-        if self.settings['memtest']:
-            bootdir = self.cdroot['boot'].path
-            logging.info("Performing memtest installation...")
-            install_memtest(bootdir, self.settings['mirror'],
-                self.settings['distribution'],
-                self.settings['architecture'])
-
         # Generate boot config
         bootconfig = BootloaderConfig(self.cdroot.path)
 
@@ -271,13 +254,6 @@ class LiveWrapper(cliapp.Application):
             bootconfig.add_live()
         if self.settings['installer']:
             bootconfig.add_installer(self.kernel_path, self.ramdisk_path)
-        if self.settings['memtest'] or self.settings['hdt']:
-            diagconfig = BootloaderConfig(self.cdroot.path)
-            if self.settings['memtest']:
-                diagconfig.add_memtest()
-            if self.settings['hdt']:
-                diagconfig.add_hdt()
-            bootconfig.add_submenu("Diagnostic Tools", diagconfig)
 
         # Install isolinux if selected
         if self.settings['isolinux']:

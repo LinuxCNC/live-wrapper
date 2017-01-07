@@ -40,21 +40,6 @@ class BootloaderConfig(object):
                              'initrd': '/d-i/%s' % (os.path.basename(ramdisk),),
                             })
 
-    def add_memtest(self):
-        self.entries.append({
-                             'description': 'memtest86',
-                             'type': 'linux16',
-                             'kernel': '/boot/memtest86+.bin',
-                            })
-
-
-    def add_hdt(self):
-        self.entries.append({
-                             'description': 'Hardware Detection Tool (HDT)',
-                             'type': 'com32',
-                             'kernel': '/isolinux/hdt.c32',
-                            })
-
     def add_submenu(self, description, loadercfg):
         self.entries.append({
                              'description': '%s' % (description),
