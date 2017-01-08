@@ -39,6 +39,32 @@ class BootloaderConfig(object):
                              'kernel': '/d-i/%s' % (os.path.basename(kernel),),
                              'initrd': '/d-i/%s' % (os.path.basename(ramdisk),),
                             })
+        self.entries.append({
+                             'description': 'Debian Installer with Speech Synthesis',
+                             'type': 'linux',
+                             'kernel': '/d-i/gtk/%s' % (os.path.basename(kernel),),
+                             'initrd': '/d-i/gtk/%s' % (os.path.basename(ramdisk),),
+                             'cmdline': 'speakup.synth=soft',
+                            })
+    def add_live_localisation(self):
+        # FIXME: need declarative paths
+        self.versions = detect_kernels(self.cdroot)
+        self.versions.sort(reverse=True)
+        #FIXME: the path of languagelist to be changed to /usr/share/live-wrapper/languagelist for debian package
+        with open('languagelist', 'r') as f:
+            lines = f.readlines()
+        lang_lines = [ line for line in lines if not line.startswith('#') ]
+        for line in lang_lines:
+            language = line.split(';') 
+            for version in self.versions:
+                self.entries.append({
+                                 'description': '%s (%s)' % (language[1], language[0],),
+                                 'type': 'linux',
+                                 'kernel': '/live/vmlinuz-%s' % (version,),
+                                 'cmdline': 'boot=live components locales=%s' % (language[5],),
+                                 'initrd': '/live/initrd.img-%s' % (version,),
+                                })
+
 
     def add_submenu(self, description, loadercfg):
         self.entries.append({

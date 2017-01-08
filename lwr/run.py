@@ -255,6 +255,9 @@ class LiveWrapper(cliapp.Application):
 
         if os.environ.get("LWR_DEBUG") is None or not 'skipvm' in os.environ['LWR_DEBUG']:
             bootconfig.add_live()
+            locallivecfg = BootloaderConfig(self.cdroot.path)
+            locallivecfg.add_live_localisation()
+            bootconfig.add_submenu('Debian Live with Localisation Support', locallivecfg)
         if self.settings['installer']:
             bootconfig.add_installer(self.kernel_path, self.ramdisk_path)
 

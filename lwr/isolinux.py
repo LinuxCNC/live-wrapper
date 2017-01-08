@@ -47,6 +47,7 @@ def generate_cfg(bootconfig, submenu=False):
            ret += " LABEL mainmenu \n "
            ret += " MENU label Back\n "
            ret += " MENU exit\n "
+           ret += " MENU end\n "
           
         # do not want to default to menus
         if first:
