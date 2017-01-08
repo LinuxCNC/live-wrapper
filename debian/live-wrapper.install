@@ -1,4 +1,4 @@
 usr/bin
 usr/lib
 hooks/customise.sh usr/share/live-wrapper
-languagelist usr/share/languagelist
+languagelist usr/share/live-wrapper
