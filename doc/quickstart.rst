@@ -97,6 +97,18 @@ For EFI boot you will need to install the ``ovmf`` package and then run:
 
  qemu-system-x86_64 -bios /usr/share/ovmf/OVMF.fd -m 2G -cdrom live.iso 
 
+To test with an emulated USB device, run:
+
+.. code-block:: shell
+
+ qemu-system-x86_64 -m 2G -usbdevice disk:live.iso
+
+.. note::
+
+ Using -hda to attach the disk image will prevent the installer from detecting
+ the "CD-ROM" as this is not a removable device, it is an emulated attached hard
+ disk drive.
+
 Next Steps
 ----------
 
