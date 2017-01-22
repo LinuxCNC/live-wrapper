@@ -50,8 +50,7 @@ class BootloaderConfig(object):
         # FIXME: need declarative paths
         self.versions = detect_kernels(self.cdroot)
         self.versions.sort(reverse=True)
-        #FIXME: the path of languagelist to be changed to /usr/share/live-wrapper/languagelist for debian package
-        with open('languagelist', 'r') as f:
+        with open('/usr/share/live-wrapper/languagelist', 'r') as f:
             lines = f.readlines()
         lang_lines = [ line for line in lines if not line.startswith('#') ]
         for line in lang_lines:
