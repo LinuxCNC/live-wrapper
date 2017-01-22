@@ -32,6 +32,7 @@ class BootloaderConfig(object):
                              'type': 'linux',
                              'kernel': '/d-i/gtk/%s' % (os.path.basename(kernel),),
                              'initrd': '/d-i/gtk/%s' % (os.path.basename(ramdisk),),
+                             'cmdline': 'append video=vesa:ywrap,mtrr vga=788'
                             })
         self.entries.append({
                              'description': 'Debian Installer',
