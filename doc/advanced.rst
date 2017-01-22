@@ -16,3 +16,14 @@ You can pass ``--no-grub`` to prevent the installation of GRUB to the image.
 If you do not want GRUB installed but you would still like the ``loopback.cfg``
 file to be installed, you can pass ``--grub-loopback-only``.
 
+Using an Alternative Build Directory
+------------------------------------
+
+Temporary directories are created using the Python standard library functions
+for doing so. On Debian systems, this typically means that the directories are
+created in ``/tmp``. If this is problematic for you, perhaps due to filesystem
+permissions, you can change the path that Python will use to create directories
+in by using the ``TMP`` environment variable, for example::
+
+    sudo TMP=/other/path lwr --blah --blah
+
