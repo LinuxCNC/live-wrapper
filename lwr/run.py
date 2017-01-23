@@ -237,8 +237,8 @@ class LiveWrapper(cliapp.Application):
             apt_udeb = AptUdebDownloader(destdir=di_root)
             apt_udeb.mirror = self.settings['mirror']
             apt_udeb.architecture = self.settings['architecture']
-            apt_udeb.suite = self.settings['distribution']
-            print("Updating a local cache for %s %s ..." % (apt_udeb.architecture, apt_udeb.suite))  # FIXME: self.message()
+            apt_udeb.codename = self.settings['distribution']
+            print("Updating a local cache for %s %s ..." % (apt_udeb.architecture, apt_udeb.codename))  # FIXME: self.message()
             logging.debug("Updating local cache...")
             apt_udeb.prepare_apt()
             # FIXME: add support for a custom apt source on top.
