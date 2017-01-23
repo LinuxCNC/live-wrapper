@@ -30,13 +30,18 @@ live-wrapper. These change the behaviour to create a customised image.
 Changing the Distribution
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
-By default, the ISO image will be built using the ``stable`` distribution. If
-you'd like to build using ``testing`` or ``unstable`` you can pass the ``-d``
+By default, the ISO image will be built using the ``stretch`` distribution. If
+you'd like to build using ``buster`` or ``sid`` you can pass the ``-d``
 parameter to live-wrapper like so:
 
 .. code-block:: shell
 
- sudo lwr -d testing
+ sudo lwr -d buster
+
+.. note::
+
+ You must use the codename, and not the suite (e.g. stable), when specifying
+ the distribution.
 
 Using an Alternative Mirror
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -102,6 +107,13 @@ To test with an emulated USB device, run:
 .. code-block:: shell
 
  qemu-system-x86_64 -m 2G -usbdevice disk:live.iso
+
+To test the speech synthesis installer option, you will need to add the
+following to the QEMU invocation:
+
+.. code-block:: shell
+
+ -soundhw sb16,es1370,adlib
 
 .. note::
 
