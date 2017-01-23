@@ -1,3 +1,26 @@
+live-wrapper (0.6) unstable; urgency=medium
+
+  [ Ana C. Custura ]
+  * Removed memtest86+ and HDT due to compatibility issues with EFI boot
+    (Closes: #813527, #846637)
+  * Added main menu title and submenu generation for bootloaders
+  * Added localised live boot options
+  * Added installer with speech synthesis boot option
+  * Fixed issues with graphical installer on isolinux boot (Closes: #846631)
+
+  [ Iain R. Learmonth ]
+  * lwr binary is now a generated entry point
+  * Added --di-daily to allow selection of d-i URLs for daily builds (Closes:
+    #846303)
+  * Documentation has been updated to show how to choose an alternative build
+    directory (Closes: #850763)
+  * Documentation updated to show how attach a USB device to QEMU (Closes:
+    #846632)
+  * python-distro-info is now used to resolve codenames to suites (Closes:
+    #846304)
+
+ -- Iain R. Learmonth <irl@debian.org>  Mon, 23 Jan 2017 02:39:31 +0000
+
 live-wrapper (0.5) unstable; urgency=medium
 
   [ Iain R. Learmonth ]
