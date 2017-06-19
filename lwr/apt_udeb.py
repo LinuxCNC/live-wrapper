@@ -195,6 +195,6 @@ def get_apt_handler(destdir, mirror, codename, architecture):
     apt_handler.mirror = mirror
     apt_handler.architecture = architecture
     apt_handler.codename = codename
-    apt_handler.components = ['main']
+    apt_handler.components = ['main', 'contrib', 'non-free']
     apt_handler.prepare_apt()
     return apt_handler
