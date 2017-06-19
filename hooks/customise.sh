@@ -17,7 +17,13 @@ cat /etc/resolv.conf > ${rootdir}/etc/resolv.conf
 
 prepare_apt_source "${LWR_MIRROR}" "${LWR_DISTRIBUTION}"
 
-chroot ${rootdir} apt-get -y install initramfs-tools live-boot live-config ${LWR_TASK_PACKAGES} ${LWR_EXTRA_PACKAGES} task-laptop task-english libnss-myhostname
+${LWR_EXTRA_PACKAGES} task-laptop task-english libnss-myhostname
+for PKG in ${FIRMWARE_PKGS}; do
+    echo "$PKG        $PKG/license/accepted       boolean true" | \
+       chroot ${rootdir} debconf-set-selections
+done
+
+chroot ${rootdir} apt-get -q -y install initramfs-tools live-boot live-config ${LWR_TASK_PACKAGES} ${LWR_EXTRA_PACKAGES} ${LWR_FIRMWARE_PACKAGES} task-laptop task-english libnss-myhostname >> vmdebootstrap.log 2>&1
 
 # Temporary fix for #843983
 chroot ${rootdir} chmod 755 /

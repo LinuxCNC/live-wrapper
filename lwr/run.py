@@ -82,6 +82,10 @@ class LiveWrapper(cliapp.Application):
             ['e', 'extra'], 'Extra packages to install',
             metavar='"PKG1 PKG2 ..."',
             group='Packages')
+        self.settings.string(
+            ['f', 'firmware'], 'Firmware packages to install',
+            metavar='"PKG1 PKG2 ..."',
+            group='Packages')
         self.settings.boolean(
             ['isolinux'], 'Add isolinux bootloader to the image '
             '(default: %default)', default=True, group="Bootloaders")
@@ -205,6 +209,7 @@ class LiveWrapper(cliapp.Application):
         os.environ['LWR_DISTRIBUTION'] = self.settings['distribution']
         os.environ['LWR_TASK_PACKAGES'] = self.settings['tasks']
         os.environ['LWR_EXTRA_PACKAGES'] = self.settings['extra']
+        os.environ['LWR_FIRMWARE_PACKAGES'] = self.settings['firmware']
 
         for envvar in os.environ.keys():
             if envvar.startswith('LWR_'):
@@ -262,6 +267,21 @@ class LiveWrapper(cliapp.Application):
             apt_udeb.clean_up_apt()
             print("... completed udeb downloads")
             logging.info("... completed udeb downloads")
+
+        # Download the firmware debs if desired
+        if len(self.settings['firmware']) > 0:
+            logging.info("Downloading firmware debs...")
+
+            # FIXME: may need a change to the download location
+            fw_root = self.cdroot['firmware'].path
+            handler = get_apt_handler(fw_root,
+                                      self.settings['mirror'],
+                                      self.settings['distribution'],
+                                      self.settings['architecture'])
+            for pkg in self.settings['firmware'].split(' '):
+                filename = handler.download_package(pkg, fw_root)
+            handler.clean_up_apt()
+            logging.info("... firmware deb downloads")
 
         # Generate boot config
         bootconfig = BootloaderConfig(self.cdroot.path)
