@@ -60,7 +60,12 @@ class LiveWrapper(cliapp.Application):
             ['m', 'mirror'], 'Mirror to use for image creation (default: %default)',
             metavar='MIRROR',
             group='Base Settings',
-            default='http://ftp.debian.org/debian/')
+            default='http://deb.debian.org/debian/')
+         self.settings.string(
+            ['apt-mirror'], 'Mirror to configure in the built image (default: %default)',
+            metavar='APT-MIRROR',
+            group='Base Settings',
+            default='http://deb.debian.org/debian/')
         self.settings.string(
 	    ['description'], 'Description for the image to be created. A '
 			     'description will be automatically generated based '
@@ -93,6 +98,11 @@ class LiveWrapper(cliapp.Application):
         self.settings.boolean(
             ['di-daily'], 'Use the daily Debian Installer builds not releases',
             default=False, group="Debian Installer")
+        self.settings.string(
+            ['customise'], 'Customisation script to run with vmdebootstrap (default: %default)',
+            metavar='CUSTOMISE',
+            group='Base Settings',
+            default='/usr/share/live-wrapper/customise.sh')
         # Logging overrides
         for s in ['log']:
             self.settings._canonical_names.remove(s)
@@ -208,7 +218,10 @@ class LiveWrapper(cliapp.Application):
             logging.info("Running vmdebootstrap...")
             vm = VMDebootstrap(self.settings['distribution'],
                                self.settings['architecture'],
-                               self.settings['mirror'], self.cdroot.path)
+                               self.settings['mirror'],
+                               self.cdroot.path,
+                               self.settings['customise'],
+                               self.settings['apt-mirror'])
             vm.run()
 
         # Initialise menu

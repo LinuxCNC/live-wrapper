@@ -30,7 +30,7 @@ from vmdebootstrap.base import runcmd
 
 class VMDebootstrap(object):
 
-    def __init__(self, distribution, architecture, mirror, cdroot):
+    def __init__(self, distribution, architecture, mirror, cdroot, customise, apt_mirror):
         self.cdroot = cdroot
         self.args = ["vmdebootstrap",
                      "--sudo", "--lock-root-password",
@@ -42,18 +42,13 @@ class VMDebootstrap(object):
                      "--log-level", "debug"]
         self.args.extend(["--distribution", distribution])
         self.args.extend(["--mirror", mirror])
-        # FIXME: apt-mirror is for what the booted image will use
-        # this needs to be accessible over http://, not just file://
-        # FIXME: this should be declared in the command line args for lwr
-        self.args.extend(["--apt-mirror", 'http://ftp.debian.org/debian/'])
+        self.args.extend(["--apt-mirror", apt_mirror])
 
         # FIXME: Logging should happen here
-        if os.path.exists(os.path.join(".", "hooks", "customise.sh")):
-            self.args.extend(["--customize", "hooks/customise.sh"])
-        elif os.path.exists("/usr/share/live-wrapper/customise.sh"):
-            self.args.extend(["--customize", "/usr/share/live-wrapper/customise.sh"])
+        if os.path.exists(customise):
+            self.args.extend(["--customize", customise])
         else:
-            raise cliapp.AppException("Could not locate customise.sh")
+            raise cliapp.AppException("Could not read customise script at %s" % customise)
 
     def run(self):
         logging.debug("vmdebootstrap command: %s" % (' '.join(self.args),))
