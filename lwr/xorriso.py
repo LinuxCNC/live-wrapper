@@ -24,8 +24,9 @@ class Xorriso(object):
     application.
     """
 
-    def __init__(self, image_output, isolinux=True, grub=True):
+    def __init__(self, image_output, volume_id, isolinux=True, grub=True):
         self.image_output = image_output
+        self.volume_id = volume_id
         self.isolinux = isolinux
         self.grub = grub
         self.args = ['xorriso']
@@ -35,7 +36,8 @@ class Xorriso(object):
             cliapp.AppException("Attempted to rebuild xorriso arguments while"
                                 "they are already defined!")
         self.args.extend(['-outdev', self.image_output])
-        self.args.extend(['map', cdroot, '/'])
+        self.args.extend(['-volid', self.volume_id])
+        self.args.extend(['-map', cdroot, '/'])
 
         if self.isolinux:
             self.args.extend(['-boot_image', 'isolinux', 'dir=/isolinux',

@@ -75,6 +75,11 @@ class LiveWrapper(cliapp.Application):
             group='Base Settings',
             default=None)
         self.settings.string(
+            ['volume_id'], 'Volume ID for the image (default: %default)',
+            metavar='VOLID',
+            group='Base Settings',
+            default='DEBIAN LIVE')
+        self.settings.string(
             ['t', 'tasks'], 'Task packages to install',
             metavar='"task-TASK1 task-TASK2 ..."',
             group='Packages')
@@ -319,6 +324,7 @@ class LiveWrapper(cliapp.Application):
         # Create ISO image
         logging.info("Creating the ISO image with Xorriso...")
         xorriso = Xorriso(self.settings['image_output'],
+                          self.settings['volume_id'],
                           isolinux=self.settings['isolinux'],
                           grub=self.settings['grub'])
         xorriso.build_args(self.cdroot.path)
