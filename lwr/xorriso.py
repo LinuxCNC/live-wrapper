@@ -38,6 +38,7 @@ class Xorriso(object):
         self.args.extend(['-outdev', self.image_output])
         self.args.extend(['-volid', self.volume_id])
         self.args.extend(['-map', cdroot, '/'])
+        self.args.extend(['-chmod', '0755', '/', '--'])
 
         if self.isolinux:
             self.args.extend(['-boot_image', 'isolinux', 'dir=/isolinux',
