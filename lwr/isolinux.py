@@ -109,3 +109,7 @@ def install_isolinux(cdroot, mirror, suite, architecture, bootconfig):
     cfg = generate_cfg(bootconfig)
     with open("%s/%s" % (cdroot, "menu.cfg"), "w") as cfgout:
         cfgout.write(cfg)
+
+    # Fix the menu display size in stdmeny.cfg (#861421)
+    runcmd(['sed', '-i', 's,menu rows 12,menu rows 8,g',
+                os.path.join(cdroot, 'stdmenu.cfg')])
