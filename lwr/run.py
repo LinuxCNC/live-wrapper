@@ -27,7 +27,7 @@ from lwr.disk import install_disk_info
 from lwr.disk import get_default_description
 from lwr.grub import install_grub
 from lwr.xorriso import Xorriso
-from lwr.apt_udeb import AptUdebDownloader
+from lwr.apt_udeb import AptUdebDownloader, get_apt_handler
 from lwr.utils import cdrom_image_url, KERNEL, RAMDISK
 from lwr.cdroot import CDRoot
 
@@ -283,7 +283,7 @@ class LiveWrapper(cliapp.Application):
                                       self.settings['mirror'],
                                       self.settings['distribution'],
                                       self.settings['architecture'])
-            for pkg in self.settings['firmware'].split(' '):
+            for pkg in self.settings['firmware'].split():
                 filename = handler.download_package(pkg, fw_root)
             handler.clean_up_apt()
             logging.info("... firmware deb downloads")
