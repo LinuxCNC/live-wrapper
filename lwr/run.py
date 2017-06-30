@@ -60,12 +60,12 @@ class LiveWrapper(cliapp.Application):
             ['m', 'mirror'], 'Mirror to use for image creation (default: %default)',
             metavar='MIRROR',
             group='Base Settings',
-            default='http://deb.debian.org/debian/')
-         self.settings.string(
+            default='http://ftp.debian.org/debian/')
+        self.settings.string(
             ['apt-mirror'], 'Mirror to configure in the built image (default: %default)',
             metavar='APT-MIRROR',
             group='Base Settings',
-            default='http://deb.debian.org/debian/')
+            default='http://ftp.debian.org/debian/')
         self.settings.string(
 	    ['description'], 'Description for the image to be created. A '
 			     'description will be automatically generated based '
