@@ -46,7 +46,7 @@ class BootloaderConfig(object):
                              'type': 'linux',
                              'kernel': '/d-i/gtk/%s' % (os.path.basename(kernel),),
                              'initrd': '/d-i/gtk/%s' % (os.path.basename(ramdisk),),
-                             'cmdline': 'speakup.synth=soft' + extra,
+                             'cmdline': 'speakup.synth=soft ' + extra,
                             })
     def add_live_localisation(self):
         # FIXME: need declarative paths
