@@ -30,7 +30,7 @@ from vmdebootstrap.base import runcmd
 
 class VMDebootstrap(object):
 
-    def __init__(self, distribution, architecture, mirror, cdroot, customise, apt_mirror):
+    def __init__(self, distribution, architecture, mirror, cdroot, customise, apt_mirror, kernel):
         self.cdroot = cdroot
         self.args = ["vmdebootstrap",
                      "--sudo", "--lock-root-password",
@@ -40,6 +40,8 @@ class VMDebootstrap(object):
                      "--log", "vmdebootstrap.log",
                      "--squash=%s" % os.path.join(self.cdroot, 'live'),
                      "--log-level", "debug"]
+        if kernel:
+            self.args.extend(["--kernel", kernel])
         self.args.extend(["--distribution", distribution])
         self.args.extend(["--mirror", mirror])
         self.args.extend(["--apt-mirror", apt_mirror])

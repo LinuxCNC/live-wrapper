@@ -80,6 +80,9 @@ class LiveWrapper(cliapp.Application):
             group='Base Settings',
             default='DEBIAN LIVE')
         self.settings.string(
+            ['kernel'], 'Kernel package to install', group='Packages',
+            metavar='linux-image-...', default=None)
+        self.settings.string(
             ['t', 'tasks'], 'Task packages to install',
             metavar='"task-TASK1 task-TASK2 ..."',
             group='Packages')
@@ -231,7 +234,8 @@ class LiveWrapper(cliapp.Application):
                                self.settings['mirror'],
                                self.cdroot.path,
                                self.settings['customise'],
-                               self.settings['apt-mirror'])
+                               self.settings['apt-mirror'],
+                               self.settings['kernel'])
             vm.run()
 
         # Initialise menu
