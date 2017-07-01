@@ -17,8 +17,8 @@ import cliapp
 import logging
 import pycurl
 import tempfile
+import shutil
 import subprocess
-from shutil import rmtree
 from tarfile import TarFile
 from lwr.vm import VMDebootstrap
 from lwr.isolinux import install_isolinux
@@ -110,6 +110,9 @@ class LiveWrapper(cliapp.Application):
         self.settings.boolean(
             ['di-daily'], 'Use the daily Debian Installer builds not releases',
             default=False, group="Debian Installer")
+        self.settings.string(
+            ['preseed'], 'Include the named preseed file for the installer',
+            default=None, group="Debian Installer")
         self.settings.string(
             ['customise'], 'Customisation script to run with vmdebootstrap (default: %default)',
             metavar='CUSTOMISE',
@@ -292,6 +295,10 @@ class LiveWrapper(cliapp.Application):
             handler.clean_up_apt()
             logging.info("... firmware deb downloads")
 
+        if self.settings['preseed']:
+            logging.info("Copying preseed file %s" % self.settings['preseed'])
+            shutil.copy(self.settings['preseed'], os.path.join(self.cdroot.path, "preseed.cfg"))
+
         # Generate boot config
         bootconfig = BootloaderConfig(self.cdroot.path)
 
@@ -301,7 +308,9 @@ class LiveWrapper(cliapp.Application):
             locallivecfg.add_live_localisation()
             bootconfig.add_submenu('Debian Live with Localisation Support', locallivecfg)
         if self.settings['installer']:
-            bootconfig.add_installer(self.kernel_path, self.ramdisk_path)
+            bootconfig.add_installer(self.kernel_path, self.ramdisk_path,
+                "preseed/file=/cdrom/preseed.cfg"
+                if self.settings['preseed'] else '')
 
         # Install isolinux if selected
         if self.settings['isolinux']:

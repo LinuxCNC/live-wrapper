@@ -26,26 +26,27 @@ class BootloaderConfig(object):
                                  'initrd': '/live/initrd.img-%s' % (version,),
                                 })
 
-    def add_installer(self, kernel, ramdisk):  # pylint: disable=no-self-use
+    def add_installer(self, kernel, ramdisk, extra=''):  # pylint: disable=no-self-use
         self.entries.append({
                              'description': 'Graphical Debian Installer',
                              'type': 'linux',
                              'kernel': '/d-i/gtk/%s' % (os.path.basename(kernel),),
                              'initrd': '/d-i/gtk/%s' % (os.path.basename(ramdisk),),
-                             'cmdline': 'append video=vesa:ywrap,mtrr vga=788'
+                             'cmdline': 'append video=vesa:ywrap,mtrr vga=788 ' + extra
                             })
         self.entries.append({
                              'description': 'Debian Installer',
                              'type': 'linux',
                              'kernel': '/d-i/%s' % (os.path.basename(kernel),),
                              'initrd': '/d-i/%s' % (os.path.basename(ramdisk),),
+                             'cmdline': extra
                             })
         self.entries.append({
                              'description': 'Debian Installer with Speech Synthesis',
                              'type': 'linux',
                              'kernel': '/d-i/gtk/%s' % (os.path.basename(kernel),),
                              'initrd': '/d-i/gtk/%s' % (os.path.basename(ramdisk),),
-                             'cmdline': 'speakup.synth=soft',
+                             'cmdline': 'speakup.synth=soft' + extra,
                             })
     def add_live_localisation(self):
         # FIXME: need declarative paths
