@@ -22,7 +22,15 @@ class BootloaderConfig(object):
                                  'description': 'Debian GNU/Linux Live (kernel %s)' % (version,),
                                  'type': 'linux',
                                  'kernel': '/live/vmlinuz-%s' % (version,),
-                                 'cmdline': 'boot=live components',
+                                 'cmdline': 'boot=live components persistence',
+                                 'initrd': '/live/initrd.img-%s' % (version,),
+                                })
+
+            self.entries.append({
+                                 'description': 'Debian GNU/Linux Live (kernel %s) nopersist' % (version,),
+                                 'type': 'linux',
+                                 'kernel': '/live/vmlinuz-%s' % (version,),
+                                 'cmdline': 'boot=live components nopersistence',
                                  'initrd': '/live/initrd.img-%s' % (version,),
                                 })
 
