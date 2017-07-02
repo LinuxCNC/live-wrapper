@@ -34,3 +34,7 @@ def install_disk_info(cdroot, description):
         i.write("netcfg\nethdetect\npcmciautils-udeb\nlive-installer\n")
     with open(os.path.join(metadir, "cd_type"), "w") as i:
         i.write("live")
+    with open(os.path.join(metadir, "base_installable"), "w") as i:
+        i.write("")
+    with open(os.path.join(metadir, "base_components"), "w") as i:
+        i.write("main")
