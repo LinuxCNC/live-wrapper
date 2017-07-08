@@ -147,6 +147,8 @@ class LiveWrapper(cliapp.Application):
             curl = pycurl.Curl()
             curl.setopt(curl.URL, url)
             curl.setopt(curl.WRITEDATA, filehandle)
+            curl.setopt(curl.FOLLOWLOCATION, True)
+            curl.setopt(curl.MAXREDIRS, 8)
             curl.perform()
             curl.close()
         except pycurl.error:
