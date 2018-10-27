@@ -126,7 +126,7 @@ class AptUdebDownloader(object):
         if not self.cache:
             raise cliapp.AppException('No cache available.')
         main_pool = os.path.join(self.destdir, '..', 'pool', 'main')
-        os.makedirs(main_pool)
+        if not os.path.exists(main_pool): os.makedirs(main_pool)
         for pkg_name in self.cache.keys():
             prefix = pkg_name[0]
             # destdir is just a base, needs pool/main/[index]/[name]
