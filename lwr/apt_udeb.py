@@ -98,9 +98,14 @@ class AptUdebDownloader(object):
         if not hasattr(pkg, 'versions'):
             raise cliapp.AppException('%s has no available versions.' % name)
         if len(pkg.versions) > 1:
-            pkg.version_list.sort(apt_pkg.version_compare) # pylint: disable=no-member
-            version = pkg.version_list[0]
-            print("Multiple versions returned for %s - using newest: %s" % (name, pkg.version_list[0]))
+            # files appear in this list without URIs.  This happened when
+            # libfuse2 was in stretch/updates/main and in stretch/main; the
+            # updates version had no uri.  was this coming from the outside
+            # system's apt cache or something?
+            versions = [p for p in pkg.versions if p.uri]
+            versions.sort()
+            version = versions[-1]
+            print("Multiple versions returned for %s - using newest: %s" % (name, version))
         else:
             version = pkg.versions[0]
         if not version.uri:
