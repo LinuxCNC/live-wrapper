@@ -167,6 +167,22 @@ class AptUdebDownloader(object):
         packages = re.sub(r"/tmp.*pool", "pool", packages)
         with open(os.path.join(meta_dir, 'Packages'), 'w') as pkgout:
             pkgout.write(packages)
+    def download_debs(self, settings, packages):
+        main_pool = os.path.join(self.destdir, '..', 'pool', 'main')
+        handler = get_apt_handler(main_pool,
+                                  settings['mirror'],
+                                  settings['distribution'],
+                                  settings['architecture'])
+        for pkg_name in packages:
+            logging.debug(pkg_name)
+            prefix = pkg_name[0]
+            # destdir is just a base, needs pool/main/[index]/[name]
+            if pkg_name[:3] == 'lib':
+                prefix = pkg_name[:4]
+            pkg_dir = os.path.join(main_pool, prefix)
+            if not os.path.isdir(pkg_dir): os.makedirs(pkg_dir)
+            filename = handler.download_package(pkg_name, pkg_dir)
+        handler.clean_up_apt()
         # More mess, this time for debs
         packages = check_output(['apt-ftparchive', '-o', 'Packages::Extensions=.deb', 'packages', os.path.join(self.destdir, '..', 'pool', 'main')])
         meta_dir = os.path.normpath(os.path.join(self.destdir, '..', 'dists', self.codename, 'main', 'binary-%s' % (self.architecture,)))

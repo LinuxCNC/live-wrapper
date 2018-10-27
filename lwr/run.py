@@ -277,6 +277,10 @@ class LiveWrapper(cliapp.Application):
 
             # download all udebs in the suite, except exclude_list
             apt_udeb.download_udebs(exclude_list)
+            apt_udeb.download_debs(self.settings,
+                    ["gettext-base", "grub-common", "grub-pc",
+                    "grub-pc-bin", "grub2-common", "libfreetype6", "libfuse2",
+                    "libpng16-16", "os-prober", "ucf"])
             # FIXME: generate a Release file
             apt_udeb.clean_up_apt()
             print("... completed udeb downloads")
